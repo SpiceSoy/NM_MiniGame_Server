@@ -27,6 +27,18 @@ namespace Game
 	public:
 		void SetSession( Network::Session* session );
 		void OnReceivedPacket( Byte* ptr );
+
+		template <class PacketType>
+		void SendPacket( const PacketType* buffer );
+		void SendByte( const Byte* data, UInt64 size );
+
 		void Update( Double deltaTime );
 	};
+
+	template <class PacketType>
+	void Game::PlayerController::SendPacket( const PacketType* buffer )
+	{
+		SendByte( reinterpret_cast<Byte*>( buffer ), sizeof( PacketType ) );
+	}
+
 };

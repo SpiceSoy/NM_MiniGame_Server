@@ -17,7 +17,14 @@ namespace Game
 {
 	class PlayerCharacter
 	{
+	private:
+		Double x;
+		Double y;
+		Double z;
 	public:
 		void Update( Double deltaTime );
+		void RotateLeft( Double value );
+		void RotateRight( Double value );
+		void Rush( Double value );
 	};
 };

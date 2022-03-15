@@ -11,7 +11,7 @@
 
 #include "Network/Server.h"
 #include "Network/UtillFuntions.h"
-#include "Game/World.h"
+#include "Game/Room.h"
 #include "Game/PlayerController.h"
 #include <iostream>
 #include <chrono>
@@ -35,7 +35,6 @@ Network::Server::~Server()
 Void Network::Server::Initialize( UInt16 Port )
 {
 	listenPort = Port;
-	this->world = std::make_unique<Game::World>();
 	InitializeSocket();
 	CreateListenSocket();
 	BindListenSocket();
@@ -61,7 +60,7 @@ Void Network::Server::Process()
 			delta = std::chrono::duration_cast<std::chrono::milliseconds>( now - prev );
 		}
 		prev = now;
-		world->Update( (Double)delta.count() * ( 1.0 / 1000.0 ) );
+		UpdateRooms(delta.count() / 1000.0f);
 	}
 	return;
 }
@@ -158,10 +157,9 @@ void Network::Server::Select()
 
 			UInt16 port = ntohs( clientAddr.sin_port );
 
-			auto* newController = world->GetNewPlayerController();
-			Session& clientSession = AddNewSession( clientSocket, newController );
+			Session& clientSession = AddNewSession( clientSocket );
 			clientSession.SetAddress( addrString, port );
-			clientSession.SetState( Session::EState::WaitLogin );
+			clientSession.SetState( Session::EState::Wait );
 			clientSession.LogInput( "connected\n" );
 		}
 	}
@@ -193,18 +191,24 @@ void Network::Server::RemoveExpiredSession()
 	sessions.erase( it, sessions.end() );
 }
 
-Network::Session& Network::Server::AddNewSession( SocketHandle socket, Game::PlayerController* controller )
+Network::Session& Network::Server::AddNewSession( SocketHandle socket )
 {
-	sessions.emplace_back( socket, controller );
+	sessions.emplace_back( socket );
 	return sessions.back();
 }
 
-void Network::Server::BroadcastByte( Byte* data, UInt32 size )
+void Network::Server::UpdateRooms( Double deltaTime )
 {
-	for( Session& session : sessions )
+	for( Game::Room& room : rooms )
 	{
-		session.SendByte( data, size );
+		room.Update(deltaTime);
 	}
+}
+
+Game::Room& Network::Server::AddNewRoom()
+{
+	rooms.emplace_back();
+	return rooms.back();
 }
 
 void Network::Server::ChangeNoneBlockingOption( SocketHandle Socket, Bool IsNoneBlocking )

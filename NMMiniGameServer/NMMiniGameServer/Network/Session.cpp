@@ -17,8 +17,8 @@
 #include <iostream>
 #include <array>
 
-Network::Session::Session( SocketHandle socket, Game::PlayerController* player )
-	: socket( socket ), port( 0 ), player( player )
+Network::Session::Session( SocketHandle socket )
+	: socket( socket ), port( 0 )
 {
 	readBuffer.resize( 1024 );
 	sendBuffer.resize( 1024 );
@@ -83,6 +83,7 @@ void Network::Session::ProcessReceive()
 			{
 				//패킷 처리
 				if(player) player->OnReceivedPacket(csr);
+				else OnReceivedPacketInWaitting(csr);
 
 				//커서 이동
 				csr += headerPtr->Size;
@@ -145,6 +146,11 @@ void Network::Session::SendByte( const Byte* data, UInt64 size )
 	if( willOver ) sendBuffer.resize( sendBuffer.size() * 2 );
 	memcpy_s( sendBuffer.data() + sendBytes, size, data, size );
 	sendBytes += size;
+}
+
+void Network::Session::OnReceivedPacketInWaitting( const Byte* data )
+{
+
 }
 
 void Network::Session::LogInput( const Char* input ) const

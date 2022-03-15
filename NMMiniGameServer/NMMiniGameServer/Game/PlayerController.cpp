@@ -25,6 +25,12 @@ void Game::PlayerController::OnReceivedPacket( Byte* ptr )
 
 }
 
+void Game::PlayerController::SendByte( const Byte* data, UInt64 size )
+{
+	if(!session) return;
+	session->SendByte(data, size);
+}
+
 void Game::PlayerController::Update( Double deltaTime )
 {
 	if(character) character->Update(deltaTime);

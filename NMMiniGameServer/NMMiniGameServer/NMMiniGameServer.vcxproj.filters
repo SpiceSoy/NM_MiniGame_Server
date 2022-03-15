@@ -9,10 +9,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="프로토콜">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="소스 파일\Network">
       <UniqueIdentifier>{6442c500-d6fc-4d4a-a4ae-71cc59e76a30}</UniqueIdentifier>
     </Filter>
@@ -39,13 +35,16 @@
     <ClInclude Include="Define\PacketDefine.h">
       <Filter>소스 파일\Define</Filter>
     </ClInclude>
-    <ClInclude Include="Game\World.h">
+    <ClInclude Include="Game\Room.h">
       <Filter>소스 파일\Game</Filter>
     </ClInclude>
     <ClInclude Include="Game\PlayerController.h">
       <Filter>소스 파일\Game</Filter>
     </ClInclude>
     <ClInclude Include="Game\PlayerCharacter.h">
+      <Filter>소스 파일\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Vector.h">
       <Filter>소스 파일\Game</Filter>
     </ClInclude>
   </ItemGroup>
@@ -65,11 +64,14 @@
     <ClCompile Include="Game\PlayerCharacter.cpp">
       <Filter>소스 파일\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Game\World.cpp">
+    <ClCompile Include="Game\Room.cpp">
       <Filter>소스 파일\Game</Filter>
     </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Vector.cpp">
+      <Filter>소스 파일\Game</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

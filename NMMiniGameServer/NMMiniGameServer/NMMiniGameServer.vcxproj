@@ -21,17 +21,19 @@
   <ItemGroup>
     <ClInclude Include="Define\DataTypes.h" />
     <ClInclude Include="Define\PacketDefine.h" />
-    <ClInclude Include="Game\World.h" />
+    <ClInclude Include="Game\Room.h" />
     <ClInclude Include="Game\PlayerCharacter.h" />
     <ClInclude Include="Game\PlayerController.h" />
+    <ClInclude Include="Game\Vector.h" />
     <ClInclude Include="Network\Server.h" />
     <ClInclude Include="Network\Session.h" />
     <ClInclude Include="Network\UtillFuntions.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Game\World.cpp" />
+    <ClCompile Include="Game\Room.cpp" />
     <ClCompile Include="Game\PlayerCharacter.cpp" />
     <ClCompile Include="Game\PlayerController.cpp" />
+    <ClCompile Include="Game\Vector.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Network\Server.cpp" />
     <ClCompile Include="Network\Session.cpp" />

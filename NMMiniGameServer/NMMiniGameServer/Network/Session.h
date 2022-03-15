@@ -19,6 +19,7 @@
 namespace Game
 {
 	class PlayerController;
+	class Room;
 };
 namespace Network
 {
@@ -27,9 +28,9 @@ namespace Network
 	public:
 		enum class EState
 		{
-			WaitLogin,
-			MainMenu,
-			InGame,
+			Wait,
+			QueueingMatch,
+			InRoom,
 			Closed,
 			Empty
 		};
@@ -46,11 +47,12 @@ namespace Network
 		std::string addressText;
 		UInt16 port;
 
-		EState state;
-		Game::PlayerController* player;
+		EState state = EState::Wait;
+		Game::PlayerController* player = nullptr;
+		Game::Room* room = nullptr;
 
 	public:
-		Session( SocketHandle socket, Game::PlayerController* player );
+		Session( SocketHandle socket );
 
 		SocketHandle GetSocket() const;
 		Bool HasSendBytes() const;
@@ -67,16 +69,10 @@ namespace Network
 		void Close();
 		void SetAddress( const Char* address, UInt16 port );
 		void LogInput( const Char* input ) const;
-
-		template <class PacketType>
-		void SendPacket( const PacketType* buffer);
 		void SendByte( const Byte* data, UInt64 size );
+		void OnReceivedPacketInWaitting( const Byte* data);
 	};
 
-	template <class PacketType>
-	void Network::Session::SendPacket( const PacketType* buffer )
-	{
-		SendByte(reinterpret_cast<Byte*>(buffer), sizeof(PacketType));
-	}
+
 
 };
