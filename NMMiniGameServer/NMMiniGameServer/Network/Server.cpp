@@ -61,9 +61,14 @@ Void Network::Server::Process()
 			delta = std::chrono::duration_cast<std::chrono::milliseconds>( now - prev );
 		}
 		prev = now;
-		UpdateRooms(delta.count() / 1000.0f);
+		UpdateRooms( delta.count() / 1000.0f );
 	}
 	return;
+}
+
+void Network::Server::AddRequest( const RequestMatch& req )
+{
+	matchQueue.push( req );
 }
 
 void Network::Server::InitializeSocket()
@@ -195,7 +200,7 @@ void Network::Server::RemoveExpiredSession()
 
 Network::Session& Network::Server::AddNewSession( SocketHandle socket )
 {
-	sessions.emplace_back( socket );
+	sessions.emplace_back( socket, this );
 	return sessions.back();
 }
 
@@ -203,13 +208,14 @@ void Network::Server::QueuingMatch()
 {
 	if( matchQueue.empty() ) return;
 	// 임시용 한명마다 방 생성
-	while ( !matchQueue.empty())
+	while( !matchQueue.empty() )
 	{
 		std::cout << "Queuing Request Matches\n";
 		Network::RequestMatch& request = matchQueue.front();
 		auto& room = AddNewRoom( 1 );
-		request.requester->SetRoom(&room);
-		request.requester->SetController( room.GetNewPlayerController(0, request.requester ) );
+		request.requester->SetRoom( &room );
+		request.requester->SetController( room.GetNewPlayerController( 0, request.requester ) );
+		matchQueue.pop();
 	}
 }
 
@@ -217,7 +223,7 @@ void Network::Server::UpdateRooms( Double deltaTime )
 {
 	for( Game::Room& room : rooms )
 	{
-		room.Update(deltaTime);
+		room.Update( deltaTime );
 	}
 }
 

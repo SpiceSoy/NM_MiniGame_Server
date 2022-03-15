@@ -11,18 +11,19 @@
 
 #include "Network/Session.h"
 #include "Network/UtillFuntions.h"
+#include "Network/Server.h"
 #include "Define/PacketDefine.h"
 #include "Game/PlayerController.h"
 #include <WinSock2.h>
 #include <iostream>
 #include <array>
 
-Network::Session::Session( SocketHandle socket )
-	: socket( socket ), port( 0 )
+Network::Session::Session( SocketHandle socket, class Server* server )
+	: socket( socket ), port( 0 ), server(server)
 {
 	readBuffer.resize( 1024 );
 	sendBuffer.resize( 1024 );
-};
+}
 
 SocketHandle Network::Session::GetSocket() const
 {
@@ -150,7 +151,13 @@ void Network::Session::SendByte( const Byte* data, UInt64 size )
 
 void Network::Session::OnReceivedPacketInWaitting( const Packet::Header* data )
 {
-
+	if(data->Type == Packet::EType::ClientRequestFindMatch)
+	{
+		LogInput("Request Match Find Recv\n");
+		RequestMatch req;
+		req.requester = this;
+		if(server) server->AddRequest(req);
+	}
 }
 
 void Network::Session::SetRoom( Game::Room* room )

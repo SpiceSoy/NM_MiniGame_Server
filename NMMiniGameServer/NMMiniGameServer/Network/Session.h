@@ -56,9 +56,10 @@ namespace Network
 		EState state = EState::Wait;
 		Game::PlayerController* contoller = nullptr;
 		Game::Room* room = nullptr;
+		class Server* server = nullptr; // 매칭용, 이후에 매치메이커로 바꿔야함.
 
 	public:
-		Session( SocketHandle socket );
+		Session( SocketHandle socket, class Server* server);
 
 		SocketHandle GetSocket() const;
 		Bool HasSendBytes() const;

@@ -43,7 +43,7 @@ namespace Network
 		~Server();
 		Void Initialize( UInt16 Port );
 		Void Process();
-
+		void AddRequest(const RequestMatch& req);
 	private:
 		void InitializeSocket();
 		void CreateListenSocket();
