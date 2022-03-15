@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Define\DataTypes.h" />
+    <ClInclude Include="Define\MapData.h" />
     <ClInclude Include="Define\PacketDefine.h" />
     <ClInclude Include="Game\Room.h" />
     <ClInclude Include="Game\PlayerCharacter.h" />

@@ -59,6 +59,8 @@ namespace Packet
 			Single locationY;
 			Single locationZ;
 
+			Single rotation;
+
 			Single speedX;
 			Single speedY;
 			Single speedZ;

@@ -18,14 +18,17 @@ namespace Game
 {
 	class PlayerCharacter
 	{
+
 	private:
 		Vector location;
+		Double speed;
 		Double rotation;
 		Double radius;
 	public:
+		PlayerCharacter();
 		void RotateLeft( Double value );
 		void RotateRight( Double value );
-		void MoveForward( Double value );
+		void SetSpeed( Double value );
 
 		const Vector& GetLocation() const;
 		PlayerCharacter& SetLocation( const Vector& location );
@@ -37,6 +40,8 @@ namespace Game
 		PlayerCharacter& SetRotation( Double rotation );
 
 		Vector GetForward() const;
+		void Update( Double deltaTime );
+		void OnCollide(PlayerCharacter& other);
 
 	};
 };

@@ -47,6 +47,9 @@
     <ClInclude Include="Game\Vector.h">
       <Filter>소스 파일\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Define\MapData.h">
+      <Filter>소스 파일\Define</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Network\Server.cpp">

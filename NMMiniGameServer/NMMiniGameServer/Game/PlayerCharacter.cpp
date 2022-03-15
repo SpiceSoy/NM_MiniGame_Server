@@ -11,6 +11,15 @@
 
 #include "Game/PlayerCharacter.h"
 #include "Define/DataTypes.h"
+#include "Define/MapData.h"
+#include <iostream>
+
+
+Game::PlayerCharacter::PlayerCharacter()
+	: radius( Constant::CharacterRadius ), location(0), speed(0), rotation(0)
+{
+
+}
 
 void Game::PlayerCharacter::RotateLeft( Double value )
 {
@@ -22,9 +31,9 @@ void Game::PlayerCharacter::RotateRight( Double value )
 	rotation += value;
 }
 
-void Game::PlayerCharacter::MoveForward( Double value )
+void Game::PlayerCharacter::SetSpeed( Double value )
 {
-	location += GetForward() * value;
+	speed = value;
 }
 
 const Game::Vector& Game::PlayerCharacter::GetLocation() const
@@ -64,4 +73,15 @@ Game::Vector Game::PlayerCharacter::GetForward() const
 {
 	const Vector defualtForward = Vector(0, 1, 0);
 	return defualtForward.Rotated2D(rotation, false);
+}
+
+void Game::PlayerCharacter::Update( Double deltaTime )
+{
+	location += GetForward() * speed * deltaTime;
+	std::cout << "location : " << location.x << " , " << location.y << " , " << location.z <<  " / rotation : " << rotation <<std::endl;
+}
+
+void Game::PlayerCharacter::OnCollide( PlayerCharacter& other )
+{
+	std::cout << "Collide" << std::endl;
 }

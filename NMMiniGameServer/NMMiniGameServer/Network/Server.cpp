@@ -12,6 +12,7 @@
 #include "Network/Server.h"
 #include "Network/Session.h"
 #include "Network/UtillFuntions.h"
+#include "Define/MapData.h"
 #include "Game/Room.h"
 #include "Game/PlayerController.h"
 #include <iostream>
@@ -208,14 +209,18 @@ void Network::Server::QueuingMatch()
 {
 	if( matchQueue.empty() ) return;
 	// 임시용 한명마다 방 생성
-	while( !matchQueue.empty() )
+	while( matchQueue.size() >= Constant::MaxUserCount )
 	{
+		auto& room = AddNewRoom( Constant::MaxUserCount );
 		std::cout << "Queuing Request Matches\n";
-		Network::RequestMatch& request = matchQueue.front();
-		auto& room = AddNewRoom( 1 );
-		request.requester->SetRoom( &room );
-		request.requester->SetController( room.GetNewPlayerController( 0, request.requester ) );
-		matchQueue.pop();
+		for ( Int32 i = 0; i < Constant::MaxUserCount; i++ )
+		{
+			Network::RequestMatch& request = matchQueue.front();
+			request.requester->SetRoom( &room );
+			request.requester->SetController( room.GetNewPlayerController( i, request.requester ) );
+			matchQueue.pop();
+		}
+		room.ReadyToGame();
 	}
 }
 

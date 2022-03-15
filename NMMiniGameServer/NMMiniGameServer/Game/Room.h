@@ -35,6 +35,8 @@ namespace Game
 		PlayerController* GetNewPlayerController(Int32 index, Network::Session* session );
 		void Update( Double deltaTime );
 
+		void ReadyToGame();
+
 		template <class PacketType>
 		void BroadcastPacket( const PacketType* buffer);
 
@@ -44,7 +46,9 @@ namespace Game
 		void BroadcastByte( const Byte* data, UInt32 size );
 		void BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex );
 	private:
+		void CheckCollision();
 		void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser);
+		Vector GetSpawnLocation(UInt32 index);
 	};
 
 	// 템플릿 함수들

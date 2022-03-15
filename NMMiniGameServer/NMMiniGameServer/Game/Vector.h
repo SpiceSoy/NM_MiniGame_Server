@@ -147,7 +147,7 @@ namespace Game
 		}
 
 
-		static Vector Distance( const Vector& a, const Vector& b )
+		static NumType Distance( const Vector& a, const Vector& b )
 		{
 			return ( a - b ).GetLength();
 		}

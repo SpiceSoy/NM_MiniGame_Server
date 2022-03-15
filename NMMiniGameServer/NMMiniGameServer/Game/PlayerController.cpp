@@ -12,6 +12,7 @@
 #include "Game/PlayerController.h"
 #include "Define/DataTypes.h"
 #include "Define/PacketDefine.h"
+#include "Define/MapData.h"
 #include "Network/Session.h"
 #include "Game/PlayerCharacter.h"
 
@@ -34,8 +35,6 @@ void Game::PlayerController::SendByte( const Byte* data, UInt64 size )
 
 void Game::PlayerController::Update( Double deltaTime )
 {
-	static const Double moveSpeed = 300.0f;
-	static const Double rotateSpeed = 360.0f;
 	if( !character ) return;
 
 	switch( moveState )
@@ -43,15 +42,20 @@ void Game::PlayerController::Update( Double deltaTime )
 	case Game::PlayerController::EMoveState::None:
 		break;
 	case Game::PlayerController::EMoveState::MoveForward:
-		character->MoveForward( moveSpeed * deltaTime);
+	{
+	}
 		break;
 	case Game::PlayerController::EMoveState::Rush:
 		break;
 	case Game::PlayerController::EMoveState::RotateLeft:
-		character->RotateLeft( moveSpeed * deltaTime );
+	{
+		character->RotateLeft( Constant::CharacterRotateSpeed * deltaTime );
+	}
 		break;
 	case Game::PlayerController::EMoveState::RotateRight:
-		character->RotateRight( moveSpeed * deltaTime );
+	{
+		character->RotateRight( Constant::CharacterRotateSpeed * deltaTime );
+	}
 		break;
 	}
 }
@@ -72,15 +76,18 @@ void Game::PlayerController::OnReceivedInputPacket( const Packet::Client::Input&
 	if(packet.left == Packet::EInputState::Click)
 	{
 		session->LogInput("Click Left\n");
+		character->SetSpeed( 0 );
 		moveState = EMoveState::RotateLeft;
 	}
 	else if(packet.right == Packet::EInputState::Click)
 	{
 		session->LogInput( "Click Right\n" );
+		character->SetSpeed( 0 );
 		moveState = EMoveState::RotateRight;
 	}
 	else
 	{
+		character->SetSpeed( Constant::CharacterDefaultSpeed );
 		moveState = EMoveState::MoveForward;
 	}
 

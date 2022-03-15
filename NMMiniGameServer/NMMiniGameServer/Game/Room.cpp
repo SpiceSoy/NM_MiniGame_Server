@@ -11,6 +11,7 @@
 
 #include "Game/Room.h"
 #include "Define/PacketDefine.h"
+#include "Define/MapData.h"
 
 
 Game::Room::Room( Int32 userCount )
@@ -32,11 +33,8 @@ Game::PlayerController* Game::Room::GetNewPlayerController( Int32 index, Network
 	instance.SetSession( session );
 	instance.SetCharacter( &character );
 
-	Packet::Server::StartMatch packet;
-	Vector location = character.GetLocation();
-	packet.playerIndex = 0; // 임시
-	packet.userCount = maxUserCount;
-	BroadcastPacket( &packet );
+
+	character.SetLocation( GetSpawnLocation( index ) );
 
 	return &instance;
 }
@@ -47,9 +45,11 @@ void Game::Room::Update( Double deltaTime )
 	{
 		player.Update( deltaTime );
 	}
+	CheckCollision();
 	for( Int32 i = 0; i < maxUserCount; i++ )
 	{
 		auto& character = characters[i];
+		character.Update( deltaTime );
 		Packet::Server::ObjectLocation packet;
 		packet.targetIndex = i;
 
@@ -57,8 +57,20 @@ void Game::Room::Update( Double deltaTime )
 		packet.locationX = location.x;
 		packet.locationY = location.y;
 		//packet.locationZ = location.z;
-		packet.locationZ = 110.0f;
-		BroadcastPacket(&packet);
+		packet.locationZ = Constant::DefaultHeight;
+		packet.rotation = character.GetRotation();
+		BroadcastPacket( &packet );
+	}
+}
+
+void Game::Room::ReadyToGame()
+{
+	Packet::Server::StartMatch packet;
+	packet.userCount = maxUserCount;
+	for( Int32 i = 0; i < maxUserCount; i++ )
+	{
+		packet.playerIndex = i; // 임시
+		players[i].SendPacket( &packet );
 	}
 }
 
@@ -72,6 +84,26 @@ void Game::Room::BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUse
 	BroadcastByteInternal( data, size, &players[expectedUserIndex] );
 }
 
+void Game::Room::CheckCollision()
+{
+	for( Int32 first = 0; first < maxUserCount; first++ )
+	{
+		auto& firstChr = characters[first];
+		for( Int32 second = first + 1; second < maxUserCount; second++ )
+		{
+			auto& secondChr = characters[second];
+			if( firstChr.GetRadius() + secondChr.GetRadius() < Vector::Distance( firstChr.GetLocation(), secondChr.GetLocation() ) )
+			{
+				//Hit
+			}
+		}
+		if( firstChr.GetLocation().GetLength() > Constant::MapSize )
+		{
+			firstChr.SetLocation( GetSpawnLocation( first ) );
+		}
+	}
+}
+
 void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser )
 {
 	for( PlayerController& player : players )
@@ -79,4 +111,12 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 		if( &player == expectedUser ) continue;
 		player.SendByte( data, size );
 	}
+}
+
+Game::Vector Game::Room::GetSpawnLocation( UInt32 index )
+{
+	Double angle = 360.0 * ( (Double)(index + 1) / (Double)maxUserCount );
+	Double spawnLength = Constant::SpawnPointRatio * Constant::MapSize;
+	Vector spawnPoint = Vector( 0.0, -spawnLength, 0.0 ).Rotated2D( angle );
+	return spawnPoint;
 }

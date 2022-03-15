@@ -60,7 +60,7 @@ namespace Game
 	template <class PacketType>
 	void Game::PlayerController::SendPacket( const PacketType* buffer )
 	{
-		SendByte( reinterpret_cast<Byte*>( buffer ), sizeof( PacketType ) );
+		SendByte( reinterpret_cast<const Byte*>( buffer ), sizeof( PacketType ) );
 	}
 
 };
