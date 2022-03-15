@@ -74,7 +74,7 @@ void Game::PlayerController::OnReceivedInputPacket( const Packet::Client::Input&
 		session->LogInput("Click Left\n");
 		moveState = EMoveState::RotateLeft;
 	}
-	if(packet.right == Packet::EInputState::Click)
+	else if(packet.right == Packet::EInputState::Click)
 	{
 		session->LogInput( "Click Right\n" );
 		moveState = EMoveState::RotateRight;
