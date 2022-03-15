@@ -106,6 +106,7 @@ void Network::Session::Close()
 	if( socket == 0 ) return;
 	closesocket( this->socket );
 	SetState( EState::Closed );
+	if(contoller) contoller->SetSession(nullptr);
 }
 
 const std::string& Network::Session::GetId() const

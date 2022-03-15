@@ -57,7 +57,7 @@ namespace Game
 
 		Vector operator+( Vector v ) const
 		{
-			return Vector( x + v.x, y * v.y, z * v.z );
+			return Vector( x + v.x, y + v.y, z + v.z );
 		}
 
 		Vector& operator+=( Vector v )

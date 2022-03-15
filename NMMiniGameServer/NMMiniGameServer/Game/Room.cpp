@@ -10,14 +10,11 @@
 
 
 #include "Game/Room.h"
+#include "Define/PacketDefine.h"
 
-
-Game::Room::Room()
-{
-
-}
 
 Game::Room::Room( Int32 userCount )
+	: maxUserCount( userCount )
 {
 	players.resize( userCount );
 	characters.resize( userCount );
@@ -34,6 +31,13 @@ Game::PlayerController* Game::Room::GetNewPlayerController( Int32 index, Network
 	auto& character = characters[index];
 	instance.SetSession( session );
 	instance.SetCharacter( &character );
+
+	Packet::Server::StartMatch packet;
+	Vector location = character.GetLocation();
+	packet.playerIndex = 0; // юс╫ц
+	packet.userCount = maxUserCount;
+	BroadcastPacket( &packet );
+
 	return &instance;
 }
 
@@ -43,19 +47,32 @@ void Game::Room::Update( Double deltaTime )
 	{
 		player.Update( deltaTime );
 	}
+	for( Int32 i = 0; i < maxUserCount; i++ )
+	{
+		auto& character = characters[i];
+		Packet::Server::ObjectLocation packet;
+		packet.targetIndex = i;
+
+		Vector location = character.GetLocation();
+		packet.locationX = location.x;
+		packet.locationY = location.y;
+		//packet.locationZ = location.z;
+		packet.locationZ = 110.0f;
+		BroadcastPacket(&packet);
+	}
 }
 
-void Game::Room::BroadcastByte( Byte* data, UInt32 size )
+void Game::Room::BroadcastByte( const Byte* data, UInt32 size )
 {
 	BroadcastByteInternal( data, size, nullptr );
 }
 
-void Game::Room::BroadcastByte( Byte* data, UInt32 size, Int32 expectedUserIndex )
+void Game::Room::BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex )
 {
 	BroadcastByteInternal( data, size, &players[expectedUserIndex] );
 }
 
-void Game::Room::BroadcastByteInternal( Byte* data, UInt32 size, PlayerController* expectedUser )
+void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser )
 {
 	for( PlayerController& player : players )
 	{

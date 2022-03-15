@@ -26,10 +26,10 @@ namespace Game
 	{
 	private:
 		Int32 currentUserCount = 0;
+		const Int32 maxUserCount = 0;
 		std::vector<PlayerController> players;
 		std::vector<PlayerCharacter> characters;
 	public:
-		Room();
 		Room(Int32 userCount);
 		~Room();
 		PlayerController* GetNewPlayerController(Int32 index, Network::Session* session );
@@ -41,22 +41,22 @@ namespace Game
 		template <class PacketType>
 		void BroadcastPacket( const PacketType* buffer, Int32 expectedUserIndex );
 
-		void BroadcastByte( Byte* data, UInt32 size );
-		void BroadcastByte( Byte* data, UInt32 size, Int32 expectedUserIndex );
+		void BroadcastByte( const Byte* data, UInt32 size );
+		void BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex );
 	private:
-		void BroadcastByteInternal( Byte* data, UInt32 size, PlayerController* expectedUser);
+		void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser);
 	};
 
 	// 템플릿 함수들
 	template <class PacketType>
 	void Game::Room::BroadcastPacket( const PacketType* buffer )
 	{
-		BroadcastByte( reinterpret_cast<Byte*>( buffer ), sizeof( PacketType ) );
+		BroadcastByte( reinterpret_cast<const Byte*>( buffer ), sizeof( PacketType ) );
 	}
 
 	template <class PacketType>
 	void Game::Room::BroadcastPacket( const PacketType* buffer, Int32 expectedUserIndex )
 	{
-		BroadcastByte( reinterpret_cast<Byte*>( buffer ), sizeof( PacketType ), expectedUserIndex );
+		BroadcastByte( reinterpret_cast<const Byte*>( buffer ), sizeof( PacketType ), expectedUserIndex );
 	}
 }

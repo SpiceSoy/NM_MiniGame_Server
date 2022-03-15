@@ -34,8 +34,8 @@ void Game::PlayerController::SendByte( const Byte* data, UInt64 size )
 
 void Game::PlayerController::Update( Double deltaTime )
 {
-	static const Double moveSpeed = 10.0f;
-	static const Double rotateSpeed = 10.0f;
+	static const Double moveSpeed = 300.0f;
+	static const Double rotateSpeed = 360.0f;
 	if( !character ) return;
 
 	switch( moveState )
@@ -71,10 +71,12 @@ void Game::PlayerController::OnReceivedInputPacket( const Packet::Client::Input&
 {
 	if(packet.left == Packet::EInputState::Click)
 	{
+		session->LogInput("Click Left\n");
 		moveState = EMoveState::RotateLeft;
 	}
 	if(packet.right == Packet::EInputState::Click)
 	{
+		session->LogInput( "Click Right\n" );
 		moveState = EMoveState::RotateRight;
 	}
 	else
