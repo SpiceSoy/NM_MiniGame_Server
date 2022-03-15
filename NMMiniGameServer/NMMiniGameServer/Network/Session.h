@@ -21,6 +21,12 @@ namespace Game
 	class PlayerController;
 	class Room;
 };
+
+namespace Packet
+{
+	struct Header;
+};
+
 namespace Network
 {
 	class Session
@@ -48,7 +54,7 @@ namespace Network
 		UInt16 port;
 
 		EState state = EState::Wait;
-		Game::PlayerController* player = nullptr;
+		Game::PlayerController* contoller = nullptr;
 		Game::Room* room = nullptr;
 
 	public:
@@ -70,7 +76,10 @@ namespace Network
 		void SetAddress( const Char* address, UInt16 port );
 		void LogInput( const Char* input ) const;
 		void SendByte( const Byte* data, UInt64 size );
-		void OnReceivedPacketInWaitting( const Byte* data);
+		void OnReceivedPacketInWaitting( const Packet::Header* data);
+
+		void SetRoom( Game::Room* room );
+		void SetController( Game::PlayerController* contoller );
 	};
 
 

@@ -11,6 +11,7 @@
 
 #pragma once
 #include "Define/DataTypes.h"
+#include "Vector.h"
 
 
 namespace Game
@@ -18,13 +19,24 @@ namespace Game
 	class PlayerCharacter
 	{
 	private:
-		Double x;
-		Double y;
-		Double z;
+		Vector location;
+		Double rotation;
+		Double radius;
 	public:
-		void Update( Double deltaTime );
 		void RotateLeft( Double value );
 		void RotateRight( Double value );
-		void Rush( Double value );
+		void MoveForward( Double value );
+
+		const Vector& GetLocation() const;
+		PlayerCharacter& SetLocation( const Vector& location );
+
+		const Double& GetRadius() const;
+		PlayerCharacter& SetRadius( Double radius );
+
+		const Double& GetRotation() const;
+		PlayerCharacter& SetRotation( Double rotation );
+
+		Vector GetForward() const;
+
 	};
 };

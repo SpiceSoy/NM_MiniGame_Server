@@ -12,8 +12,8 @@
 
 #pragma once
 #include "Define/DataTypes.h"
-#define SERVER_HEADER(x) {sizeof(x), static_cast<Byte>(EType::Server##x)}
-#define CLIENT_HEADER(x) {sizeof(x), static_cast<Byte>(EType::Client##x)}
+#define SERVER_HEADER(x) {sizeof(x), (EType::Server##x)}
+#define CLIENT_HEADER(x) {sizeof(x), (EType::Client##x)}
 #pragma pack(push, 1)
 
 
@@ -33,13 +33,14 @@ namespace Packet
 	{
 		None,
 		Click,
+		Press,
 		Release,
 	};
 
 	struct Header
 	{
 		Byte Size;
-		Byte Type;
+		EType Type;
 	};
 
 	namespace Server

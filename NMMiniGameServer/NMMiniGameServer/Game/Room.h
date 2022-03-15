@@ -10,7 +10,8 @@
 
 
 #pragma once
-#include "PlayerController.h"
+#include "Game/PlayerController.h"
+#include "Game/PlayerCharacter.h"
 #include <vector>
 
 
@@ -26,6 +27,7 @@ namespace Game
 	private:
 		Int32 currentUserCount = 0;
 		std::vector<PlayerController> players;
+		std::vector<PlayerCharacter> characters;
 	public:
 		Room();
 		Room(Int32 userCount);

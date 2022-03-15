@@ -52,9 +52,9 @@ namespace Network
 		void Select();
 		void RemoveExpiredSession();
 		Session& AddNewSession( SocketHandle socket );
-		void QueueingMatch();
+		void QueuingMatch();
 		void UpdateRooms(Double deltaTime);
-		Game::Room& AddNewRoom();
+		Game::Room& AddNewRoom( Int32 userCount );
 
 		static void ChangeNoneBlockingOption( SocketHandle Socket, Bool IsNoneBlocking );
 	};

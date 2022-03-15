@@ -82,8 +82,8 @@ void Network::Session::ProcessReceive()
 			else // 완전하면
 			{
 				//패킷 처리
-				if(player) player->OnReceivedPacket(csr);
-				else OnReceivedPacketInWaitting(csr);
+				if(contoller) contoller->OnReceivedPacket( headerPtr );
+				else OnReceivedPacketInWaitting( headerPtr );
 
 				//커서 이동
 				csr += headerPtr->Size;
@@ -148,9 +148,20 @@ void Network::Session::SendByte( const Byte* data, UInt64 size )
 	sendBytes += size;
 }
 
-void Network::Session::OnReceivedPacketInWaitting( const Byte* data )
+void Network::Session::OnReceivedPacketInWaitting( const Packet::Header* data )
 {
 
+}
+
+void Network::Session::SetRoom( Game::Room* room )
+{
+	this->room = room;
+	LogInput("Enter Room");
+}
+
+void Network::Session::SetController( Game::PlayerController* contoller )
+{
+	this->contoller = contoller;
 }
 
 void Network::Session::LogInput( const Char* input ) const

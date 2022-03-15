@@ -17,7 +17,7 @@
 
 namespace Game
 {
-	class Vector
+	struct Vector
 	{
 		using NumType = Double;
 		NumType x = 0.0;
@@ -57,7 +57,7 @@ namespace Game
 
 		Vector operator+( Vector v ) const
 		{
-			return Vector( x + v.x, y * v.y, z * v.z);
+			return Vector( x + v.x, y * v.y, z * v.z );
 		}
 
 		Vector& operator+=( Vector v )
@@ -111,7 +111,7 @@ namespace Game
 
 		NumType GetLength() const
 		{
-			return sqrt(GetSqr());
+			return sqrt( GetSqr() );
 		}
 
 		Vector Normalized() const
@@ -125,9 +125,32 @@ namespace Game
 			return *this;
 		}
 
+		Vector Rotated2D( Double rotation, bool isRadian = false ) const
+		{
+			Double radian = isRadian ? rotation : rotation * 3.141592 / 180.0;
+			Double cosValue = cos( radian );
+			Double sinValue = sin( radian );
+			Double newX = cosValue * x - sinValue * y;
+			Double newY = sinValue * x + cosValue * y;
+			return Vector( newX, newY, z );
+		}
+
+		Vector& Rotate2D( Double rotation, bool isRadian = false )
+		{
+			*this = this->Rotated2D( rotation, isRadian );
+			return *this;
+		}
+
 		NumType AtanYX() const
 		{
-			return atan2(y, x);
+			return atan2( y, x );
 		}
+
+
+		static Vector Distance( const Vector& a, const Vector& b )
+		{
+			return ( a - b ).GetLength();
+		}
+
 	};
 };

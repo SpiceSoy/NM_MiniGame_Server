@@ -10,6 +10,7 @@
 
 
 #include "Network/Server.h"
+#include "Network/Session.h"
 #include "Network/UtillFuntions.h"
 #include "Game/Room.h"
 #include "Game/PlayerController.h"
@@ -183,6 +184,7 @@ void Network::Server::Select()
 		session.LogInput( "connection error" );
 	}
 	RemoveExpiredSession();
+	QueuingMatch();
 }
 
 void Network::Server::RemoveExpiredSession()
@@ -197,6 +199,20 @@ Network::Session& Network::Server::AddNewSession( SocketHandle socket )
 	return sessions.back();
 }
 
+void Network::Server::QueuingMatch()
+{
+	if( matchQueue.empty() ) return;
+	// 임시용 한명마다 방 생성
+	while ( !matchQueue.empty())
+	{
+		std::cout << "Queuing Request Matches\n";
+		Network::RequestMatch& request = matchQueue.front();
+		auto& room = AddNewRoom( 1 );
+		request.requester->SetRoom(&room);
+		request.requester->SetController( room.GetNewPlayerController(0, request.requester ) );
+	}
+}
+
 void Network::Server::UpdateRooms( Double deltaTime )
 {
 	for( Game::Room& room : rooms )
@@ -205,9 +221,9 @@ void Network::Server::UpdateRooms( Double deltaTime )
 	}
 }
 
-Game::Room& Network::Server::AddNewRoom()
+Game::Room& Network::Server::AddNewRoom( Int32 userCount )
 {
-	rooms.emplace_back();
+	rooms.emplace_back( userCount );
 	return rooms.back();
 }
 
