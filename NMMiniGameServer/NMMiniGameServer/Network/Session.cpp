@@ -59,7 +59,7 @@ void Network::Session::ProcessSend()
 void Network::Session::ProcessReceive()
 {
 	// 이름 겹쳐서 로컬변수 전문 작성
-	Int32 receivedBytes = recv( socket, ( (char*)readBuffer.data() ) + recvBytes, readBuffer.size() * sizeof( Byte ), 0 );
+	Int32 receivedBytes = recv( socket, ( (char*)readBuffer.data() ) + recvBytes, readBuffer.size() * sizeof( Byte ) - recvBytes, 0 );
 	Char* expectEnd = reinterpret_cast<Char*>( readBuffer.data() + recvBytes + receivedBytes - 1 );
 	if( receivedBytes == 0 || receivedBytes == SOCKET_ERROR )
 	{
