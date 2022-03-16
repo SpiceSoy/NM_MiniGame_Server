@@ -152,5 +152,12 @@ namespace Game
 			return ( a - b ).GetLength();
 		}
 
+		static Vector Reflect( const Vector& normal, const Vector& vector )
+		{
+			const Vector& P = vector;
+			const Vector& n = normal;
+			return P + n * 2 *(-P * n);
+		}
+
 	};
 };

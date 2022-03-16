@@ -21,8 +21,8 @@ namespace Game
 
 	private:
 		Vector location;
+		Vector forward;
 		Double speed;
-		Double rotation;
 		Double radius;
 	public:
 		PlayerCharacter();
@@ -36,10 +36,10 @@ namespace Game
 		const Double& GetRadius() const;
 		PlayerCharacter& SetRadius( Double radius );
 
-		const Double& GetRotation() const;
 		PlayerCharacter& SetRotation( Double rotation );
 
-		Vector GetForward() const;
+		const Vector& GetForward() const;
+		PlayerCharacter& SetForward( const Vector& forward );
 		void Update( Double deltaTime );
 		void OnCollide(PlayerCharacter& other);
 

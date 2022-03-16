@@ -16,19 +16,19 @@
 
 
 Game::PlayerCharacter::PlayerCharacter()
-	: radius( Constant::CharacterRadius ), location(0), speed(0), rotation(0)
+	: radius( Constant::CharacterRadius ), location(0), speed(0), forward(0,1,0)
 {
 
 }
 
 void Game::PlayerCharacter::RotateLeft( Double value )
 {
-	rotation -= value;
+	forward.Rotate2D( -value );
 }
 
 void Game::PlayerCharacter::RotateRight( Double value )
 {
-	rotation += value;
+	forward.Rotate2D( value );
 }
 
 void Game::PlayerCharacter::SetSpeed( Double value )
@@ -58,29 +58,32 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetRadius( Double radius )
 	return *this;
 }
 
-const Double& Game::PlayerCharacter::GetRotation() const
-{
-	return rotation;
-}
-
 Game::PlayerCharacter& Game::PlayerCharacter::SetRotation( Double rotation )
 {
-	this->rotation = rotation;
+	const Vector defualtForward = Vector( 0, 1, 0 );
+	forward = defualtForward.Rotated2D( rotation, false );
 	return *this;
 }
 
-Game::Vector Game::PlayerCharacter::GetForward() const
+const Game::Vector& Game::PlayerCharacter::GetForward() const
 {
-	const Vector defualtForward = Vector(0, 1, 0);
-	return defualtForward.Rotated2D(rotation, false);
+	return forward;
+}
+
+
+Game::PlayerCharacter& Game::PlayerCharacter::SetForward( const Vector& forward )
+{
+	this->forward = forward;
+	return *this;
 }
 
 void Game::PlayerCharacter::Update( Double deltaTime )
 {
-	location += GetForward() * speed * deltaTime;
+	location += forward * speed * deltaTime;
 	//std::cout << "location : " << location.x << " , " << location.y << " , " << location.z <<  " / rotation : " << rotation <<std::endl;
 }
 
 void Game::PlayerCharacter::OnCollide( PlayerCharacter& other )
 {
+	std::cout << "Collide" << std::endl;
 }

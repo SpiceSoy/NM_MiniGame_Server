@@ -46,9 +46,13 @@ namespace Game
 		void BroadcastByte( const Byte* data, UInt32 size );
 		void BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex );
 	private:
-		void CheckCollision();
-		void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser);
+		void CheckCollision( Double deltaTime);
+
+		bool IsCollide( Game::PlayerCharacter& firstChr, Game::PlayerCharacter& secondChr );
+
+		void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser );
 		Vector GetSpawnLocation(UInt32 index);
+		Vector GetSpawnForward( UInt32 index );
 	};
 
 	// 템플릿 함수들
