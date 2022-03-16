@@ -54,7 +54,7 @@ Void Network::Server::Process()
 		Select();
 		auto now = std::chrono::system_clock::now();
 		auto delta = std::chrono::duration_cast<std::chrono::milliseconds>( now - prev );
-		auto expected = std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::milliseconds( 1000 / 30 ) );
+		auto expected = std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::milliseconds( Constant::TickTerm ) );
 		if( expected > delta )
 		{
 			std::this_thread::sleep_for( expected - delta );

@@ -78,10 +78,9 @@ Game::Vector Game::PlayerCharacter::GetForward() const
 void Game::PlayerCharacter::Update( Double deltaTime )
 {
 	location += GetForward() * speed * deltaTime;
-	std::cout << "location : " << location.x << " , " << location.y << " , " << location.z <<  " / rotation : " << rotation <<std::endl;
+	//std::cout << "location : " << location.x << " , " << location.y << " , " << location.z <<  " / rotation : " << rotation <<std::endl;
 }
 
 void Game::PlayerCharacter::OnCollide( PlayerCharacter& other )
 {
-	std::cout << "Collide" << std::endl;
 }

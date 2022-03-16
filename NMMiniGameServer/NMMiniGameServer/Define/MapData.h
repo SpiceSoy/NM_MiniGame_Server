@@ -23,6 +23,7 @@ namespace Constant
 	constexpr Double CharacterDefaultSpeed = 300.0;
 	constexpr Double CharacterRotateSpeed = 360.0;
 	constexpr Double DefaultHeight = -84.787506;
+	constexpr UInt32 TickTerm = 1000 / 60;
 	constexpr UInt32 MaxUserCount = 2;
 };
 

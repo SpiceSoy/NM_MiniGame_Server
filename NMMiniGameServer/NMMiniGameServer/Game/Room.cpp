@@ -12,6 +12,7 @@
 #include "Game/Room.h"
 #include "Define/PacketDefine.h"
 #include "Define/MapData.h"
+#include <iostream>
 
 
 Game::Room::Room( Int32 userCount )
@@ -49,7 +50,8 @@ void Game::Room::Update( Double deltaTime )
 	for( Int32 i = 0; i < maxUserCount; i++ )
 	{
 		auto& character = characters[i];
-		character.Update( deltaTime );
+		if(i == 0)
+			character.Update( deltaTime );
 		Packet::Server::ObjectLocation packet;
 		packet.targetIndex = i;
 
@@ -92,9 +94,16 @@ void Game::Room::CheckCollision()
 		for( Int32 second = first + 1; second < maxUserCount; second++ )
 		{
 			auto& secondChr = characters[second];
-			if( firstChr.GetRadius() + secondChr.GetRadius() < Vector::Distance( firstChr.GetLocation(), secondChr.GetLocation() ) )
+			Double dist = Vector::Distance( firstChr.GetLocation(), secondChr.GetLocation() );
+			Double sumRadius = firstChr.GetRadius() + secondChr.GetRadius();
+			bool isCollide = sumRadius > dist;
+			if( isCollide )
 			{
-				//Hit
+				// 점과 점 간 벡터로 노말 계산
+				// 노말을 통해 Forward 
+				std::cout << "Collide" << std::endl;
+				firstChr.OnCollide( secondChr );
+				secondChr.OnCollide( firstChr );
 			}
 		}
 		if( firstChr.GetLocation().GetLength() > Constant::MapSize )
