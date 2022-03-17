@@ -133,7 +133,7 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnUpdate( EState::Spawn,
 		[this] ( Double deltaTime ) -> StateFuncResult<EState>
 		{
-			if( this->timerSpawnStart.IsOver( 1.5s ) )
+			if( this->timerSpawnStart.IsOver( 3s ) )
 			{
 				std::cout << "Change idle" << std::endl;
 				return StateFuncResult<EState>( EState::Idle );
@@ -185,6 +185,7 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnEnter( EState::RotateLeft,
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
+			std::cout << "Change Rotate Left" << std::endl;
 			this->SendStateChangedPacket( EState::Rotate );
 			this->character->SetMoveSpeed( 0 );
 			return StateFuncResult<EState>::NoChange( );
@@ -212,6 +213,7 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnEnter( EState::RotateRight,
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
+			std::cout << "Change Rotate Right" << std::endl;
 			this->SendStateChangedPacket( EState::Rotate );
 			this->character->SetMoveSpeed( 0 );
 			return StateFuncResult<EState>::NoChange( );

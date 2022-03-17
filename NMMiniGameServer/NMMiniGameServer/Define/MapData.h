@@ -26,9 +26,10 @@ namespace Constant
 	constexpr Double CharacterRadius = 50.0;
 	constexpr Double CharacterWeight = 10.0f;
 	constexpr Double CharacterSpring = 1.0f;
-	constexpr Double CharacterDefaultSpeed = 300.0;
-	constexpr Double CharacterRotateSpeed = 360.0;
-	constexpr Double CharacterRushSpeed = 300.0;
+	constexpr Double CharacterDefaultSpeed = 600.0;
+	constexpr Double CharacterRotateSpeed = 700.0;
+	constexpr Double CharacterRushSpeed = 1000.0;
+	constexpr Double CharacterFriction = 1000.0f;
 	constexpr Double DefaultHeight = -84.787506;
 
 	// Game

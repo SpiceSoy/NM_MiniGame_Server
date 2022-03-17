@@ -15,8 +15,8 @@
 #include <iostream>
 
 
-Game::PlayerCharacter::PlayerCharacter()
-	: radius( Constant::CharacterRadius ), location(0), speed(0), forward(0,1,0), defaultMove(0)
+Game::PlayerCharacter::PlayerCharacter( )
+	: radius( Constant::CharacterRadius ), location( 0 ), speed( 0 ), forward( 0, 1, 0 ), defaultMove( 0 )
 {
 
 }
@@ -31,35 +31,35 @@ void Game::PlayerCharacter::RotateRight( Double value )
 	forward.Rotate2D( value );
 }
 
-const Game::Vector& Game::PlayerCharacter::GetSpeed() const
+const Game::Vector& Game::PlayerCharacter::GetSpeed( ) const
 {
 	return speed;
 }
 
-Game::PlayerCharacter& Game::PlayerCharacter::SetSpeed(const Vector& speed)
+Game::PlayerCharacter& Game::PlayerCharacter::SetSpeed( const Vector& speed )
 {
 	this->speed = speed;
 	return *this;
 }
 
-Game::PlayerCharacter& Game::PlayerCharacter::AddSpeed(const Vector& speed)
+Game::PlayerCharacter& Game::PlayerCharacter::AddSpeed( const Vector& speed )
 {
 	this->speed += speed;
 	return *this;
 }
 
-const Double& Game::PlayerCharacter::GetMoveSpeed() const
+const Double& Game::PlayerCharacter::GetMoveSpeed( ) const
 {
 	return defaultMove;
 }
 
-Game::PlayerCharacter& Game::PlayerCharacter::SetMoveSpeed(const Double& speed)
+Game::PlayerCharacter& Game::PlayerCharacter::SetMoveSpeed( const Double& speed )
 {
 	defaultMove = speed;
 	return *this;
 }
 
-const Game::Vector& Game::PlayerCharacter::GetLocation() const
+const Game::Vector& Game::PlayerCharacter::GetLocation( ) const
 {
 	return location;
 }
@@ -70,7 +70,7 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetLocation( const Vector& locatio
 	return *this;
 }
 
-const Double& Game::PlayerCharacter::GetRadius() const
+const Double& Game::PlayerCharacter::GetRadius( ) const
 {
 	return radius;
 }
@@ -88,7 +88,7 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetRotation( Double rotation )
 	return *this;
 }
 
-const Game::Vector& Game::PlayerCharacter::GetForward() const
+const Game::Vector& Game::PlayerCharacter::GetForward( ) const
 {
 	return forward;
 }
@@ -102,26 +102,38 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetForward( const Vector& forward 
 
 void Game::PlayerCharacter::Update( Double deltaTime )
 {
-	location += (speed + forward * defaultMove) * deltaTime;
-	speed -= speed * deltaTime * 2.0f;
-	//std::cout << "location : " << location.x << " , " << location.y << " , " << location.z << std::endl;
+	location += ( speed + forward * defaultMove ) * deltaTime;
+
+	// ¸¶Âû·Â
+	if( !speed.IsZero( ) )
+	{
+		Vector Friction = -speed.Normalized( ) * Constant::CharacterFriction * deltaTime * 2.0f;
+		if( speed.GetSqr( ) < Friction.GetSqr( ) )
+		{
+			speed = Vector::Zero();
+		}
+		else
+		{
+			speed = speed + Friction;	
+		}
+	}
 }
 
 void Game::PlayerCharacter::OnCollide( PlayerCharacter& other )
 {
 }
 
-void Game::PlayerCharacter::TurnOnColliderFillter(const PlayerCharacter& other)
+void Game::PlayerCharacter::TurnOnColliderFillter( const PlayerCharacter& other )
 {
-	collidFillter.insert(&other);
+	collidFillter.insert( &other );
 }
 
-void Game::PlayerCharacter::TurnOffColliderFillter(const PlayerCharacter& other)
+void Game::PlayerCharacter::TurnOffColliderFillter( const PlayerCharacter& other )
 {
-	collidFillter.erase(&other);
+	collidFillter.erase( &other );
 }
 
-bool Game::PlayerCharacter::GetColliderFillter(const PlayerCharacter& other) const
+bool Game::PlayerCharacter::GetColliderFillter( const PlayerCharacter& other ) const
 {
-	return collidFillter.count(&other);
+	return collidFillter.count( &other );
 }

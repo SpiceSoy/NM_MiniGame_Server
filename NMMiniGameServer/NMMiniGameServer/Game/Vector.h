@@ -24,7 +24,7 @@ namespace Game
 		NumType y = 0.0;
 		NumType z = 0.0;
 
-		Vector() {}
+		Vector( ) {}
 
 		template<typename ScalarTy, bool isValid = std::is_scalar<ScalarTy>::value >
 		Vector( ScalarTy value )
@@ -99,29 +99,29 @@ namespace Game
 			return *this;
 		}
 
-		Vector operator-() const
+		Vector operator-( ) const
 		{
 			return *this * -1.0f;
 		}
 
-		NumType GetSqr() const
+		NumType GetSqr( ) const
 		{
 			return x * x + y * y + z * z;
 		}
 
-		NumType GetLength() const
+		NumType GetLength( ) const
 		{
-			return sqrt( GetSqr() );
+			return sqrt( GetSqr( ) );
 		}
 
-		Vector Normalized() const
+		Vector Normalized( ) const
 		{
-			return *this / GetLength();
+			return *this / GetLength( );
 		}
 
-		Vector& Normalize()
+		Vector& Normalize( )
 		{
-			*this = this->Normalized();
+			*this = this->Normalized( );
 			return *this;
 		}
 
@@ -141,22 +141,31 @@ namespace Game
 			return *this;
 		}
 
-		NumType AtanYX() const
+		NumType AtanYX( ) const
 		{
 			return atan2( y, x );
 		}
 
+		bool IsZero( ) const
+		{
+			return x == 0 && y == 0 && z == 0;
+		}
+
+		static Vector Zero( )
+		{
+			return Vector( 0 );
+		}
 
 		static NumType Distance( const Vector& a, const Vector& b )
 		{
-			return ( a - b ).GetLength();
+			return ( a - b ).GetLength( );
 		}
 
 		static Vector Reflect( const Vector& normal, const Vector& vector )
 		{
 			const Vector& P = vector;
 			const Vector& n = normal;
-			return P + n * 2 *(-P * n);
+			return P + n * 2 * ( -P * n );
 		}
 
 	};
