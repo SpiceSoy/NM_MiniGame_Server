@@ -68,7 +68,7 @@ void Network::Session::ProcessReceive()
 	else
 	{
 		recvBytes += receivedBytes;
-		LogInput("Packet Recv\n");
+		//LogInput("Packet Recv\n");
 
 		Byte* dataBegin = readBuffer.data();
 		Byte* csr = dataBegin;
@@ -165,7 +165,7 @@ void Network::Session::OnReceivedPacketInWaitting( const Packet::Header* data )
 void Network::Session::SetRoom( Game::Room* room )
 {
 	this->room = room;
-	LogInput("Enter Room");
+	LogInput("Enter Room\n");
 }
 
 void Network::Session::SetController( Game::PlayerController* contoller )

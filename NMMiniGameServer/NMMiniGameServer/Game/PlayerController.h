@@ -12,6 +12,8 @@
 #pragma once
 #include "Define/DataTypes.h"
 #include "Game/Vector.h"
+#include "Game/LambdaFSM.h"
+#include "Game/Timer.h"
 #include <chrono>
 
 
@@ -33,6 +35,7 @@ namespace Game
 {
 	class PlayerController
 	{
+	public:
 		enum class EMoveState
 		{
 			None,
@@ -41,16 +44,35 @@ namespace Game
 			RotateLeft,
 			RotateRight,
 		};
-		using SystemClock = std::chrono::system_clock;
-		using TimePoint = SystemClock::time_point;
-		using Duration = std::chrono::duration<std::chrono::seconds>;
+
+		enum class EState : Byte
+		{
+			Spawn = 0,
+			Idle = 1,
+			Run = 2,
+			Rush = 3,
+			Rotate = 4,
+			Hit = 5,
+			Win = 6,
+			Lose = 7,
+			Die = 8,
+			// not used in client
+			RotateLeft = 9,
+			RotateRight = 10,
+		};
+
 	private:
 		class PlayerCharacter* character = nullptr;
 		Network::Session* session = nullptr;
+		class Room * room = nullptr;
+
+		Timer timerRushUse;
+		Timer timerRushGen;
+		Timer timerSpawnStart;
+
 		EMoveState moveState = EMoveState::None;
 		Int32 rushStack = 3;
-		TimePoint allowedRushTime;
-		TimePoint RushGenTime;
+		LambdaFSM<EState> fsm;
 	public:
 		PlayerController();
 		~PlayerController() = default;
@@ -63,11 +85,11 @@ namespace Game
 
 		void Update( Double deltaTime );
 		void OnReceivedPacket( const Packet::Header* ptr );
+		EState GetState() const;
 	private:
-		void OnReceivedInputPacket( const Packet::Client::Input& packet);
-		void UpdateMove(Double deltaTime);
 		void UseRush();
 		bool CanRush();
+		void AddStateFunctions();
 	};
 
 	template <class PacketType>

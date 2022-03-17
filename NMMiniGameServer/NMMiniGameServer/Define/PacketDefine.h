@@ -55,15 +55,19 @@ namespace Packet
 		{
 			Header header = SERVER_HEADER( ObjectLocation );
 			Int32 targetIndex;
+			Int32 chracterState;
+
 			Single locationX;
 			Single locationY;
 			Single locationZ;
 
-			Single rotation;
+			Single forwardX;
+			Single forwardY;
+			Single forwardZ;
 
-			Single speedX;
-			Single speedY;
-			Single speedZ;
+			Single velocityX;
+			Single velocityY;
+			Single velocityZ;
 		};
 	};
 

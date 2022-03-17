@@ -22,18 +22,22 @@
     <ClInclude Include="Define\DataTypes.h" />
     <ClInclude Include="Define\MapData.h" />
     <ClInclude Include="Define\PacketDefine.h" />
+    <ClInclude Include="Game\LambdaFSM.h" />
     <ClInclude Include="Game\Room.h" />
     <ClInclude Include="Game\PlayerCharacter.h" />
     <ClInclude Include="Game\PlayerController.h" />
+    <ClInclude Include="Game\Timer.h" />
     <ClInclude Include="Game\Vector.h" />
     <ClInclude Include="Network\Server.h" />
     <ClInclude Include="Network\Session.h" />
     <ClInclude Include="Network\UtillFuntions.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Game\LambdaFSM.cpp" />
     <ClCompile Include="Game\Room.cpp" />
     <ClCompile Include="Game\PlayerCharacter.cpp" />
     <ClCompile Include="Game\PlayerController.cpp" />
+    <ClCompile Include="Game\Timer.cpp" />
     <ClCompile Include="Game\Vector.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Network\Server.cpp" />

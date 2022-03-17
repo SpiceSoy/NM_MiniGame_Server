@@ -53,17 +53,17 @@ void Game::Room::Update( Double deltaTime )
 		character.Update( deltaTime );
 		Packet::Server::ObjectLocation packet;
 		packet.targetIndex = i;
-
+		packet.chracterState = static_cast<Byte>(players[i].GetState());
 		Vector location = character.GetLocation();
 		packet.locationX = location.x;
 		packet.locationY = location.y;
 		packet.locationZ = Constant::DefaultHeight;
 		//packet.rotation = character.GetRotation();
-		packet.rotation = 0.0;
 		Vector forward = character.GetForward();
-		packet.speedX = forward.x;
-		packet.speedY = forward.y;
-		packet.speedZ = forward.z;
+		packet.forwardX = forward.x;
+		packet.forwardY = forward.y;
+		packet.forwardZ = forward.z;
+
 		BroadcastPacket( &packet );
 	}
 }
