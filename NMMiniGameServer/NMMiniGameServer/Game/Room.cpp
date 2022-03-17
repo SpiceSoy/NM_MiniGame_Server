@@ -50,22 +50,10 @@ void Game::Room::Update( Double deltaTime )
 	CheckCollision( deltaTime );
 	for( Int32 i = 0; i < maxUserCount; i++ )
 	{
-		auto& character = characters[i];
+		PlayerCharacter& character = characters[i];
+		PlayerController& controller = players[i];
 		character.Update( deltaTime );
-		Packet::Server::ObjectLocation packet;
-		packet.targetIndex = i;
-		packet.chracterState = static_cast<Byte>( players[i].GetState( ) );
-		Vector location = character.GetLocation( );
-		packet.locationX = location.x;
-		packet.locationY = location.y;
-		packet.locationZ = Constant::DefaultHeight;
-		//packet.rotation = character.GetRotation();
-		Vector forward = character.GetForward( );
-		packet.forwardX = forward.x;
-		packet.forwardY = forward.y;
-		packet.forwardZ = forward.z;
-
-		BroadcastPacket( &packet );
+		controller.BroadcastObjectLocation(false);
 	}
 }
 
@@ -77,19 +65,7 @@ void Game::Room::ReadyToGame( )
 	{
 		packet.playerIndex = i; // юс╫ц
 		players[i].SendPacket( &packet );
-		auto& character = characters[i];
-		Packet::Server::ObjectLocation packet;
-		packet.targetIndex = i;
-		packet.chracterState = static_cast<Byte>( players[i].GetState( ) );
-		Vector location = character.GetLocation( );
-		packet.locationX = location.x;
-		packet.locationY = location.y;
-		packet.locationZ = Constant::DefaultHeight;
-		//packet.rotation = character.GetRotation();
-		Vector forward = character.GetForward( );
-		packet.forwardX = forward.x;
-		packet.forwardY = forward.y;
-		packet.forwardZ = forward.z;
+		players[i].BroadcastObjectLocation(true);
 		players[i].Initialize( );
 	}
 }
@@ -104,53 +80,58 @@ void Game::Room::BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUse
 	BroadcastByteInternal( data, size, &players[expectedUserIndex] );
 }
 
+void Game::Room::CheckCollisionTwoPlayer( Game::PlayerCharacter& firstChr, Game::PlayerCharacter& secondChr )
+{
+	bool isCollide = IsCollide( firstChr, secondChr );
+	bool isLastCollided = firstChr.GetColliderFillter( secondChr ) || secondChr.GetColliderFillter( firstChr );
+	if( isCollide && !isLastCollided )
+	{
+		firstChr.TurnOnColliderFillter( secondChr );
+		secondChr.TurnOnColliderFillter( firstChr );
+
+		//std::cout << "Collide!" << std::endl;
+
+		Vector normal = firstChr.GetLocation( ) - secondChr.GetLocation( );
+		normal.Normalize( );
+		Vector firstForward = firstChr.GetForward( );
+		Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized( );
+		Vector secondForward = secondChr.GetForward( );
+		Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized( );
+
+		firstChr.SetSpeed( firstReflected * Constant::CharacterDefaultSpeed * 5 );
+		secondChr.SetSpeed( secondReflected * Constant::CharacterDefaultSpeed * 5 );
+
+		while( IsCollide( firstChr, secondChr ) )
+		{
+			firstChr.SetLocation( firstChr.GetLocation( ) + firstReflected * 0.1f );
+			secondChr.SetLocation( secondChr.GetLocation( ) + secondReflected * 0.1f );
+		}
+		firstChr.OnCollide( secondChr );
+		secondChr.OnCollide( firstChr );
+	}
+	else
+	{
+		firstChr.TurnOffColliderFillter( secondChr );
+		secondChr.TurnOffColliderFillter( firstChr );
+	}
+}
+
 void Game::Room::CheckCollision( Double deltaTime )
 {
 	//std::cout << "CollideFrame" << std::endl;
 	for( Int32 first = 0; first < maxUserCount; first++ )
 	{
-		auto& firstChr = characters[first];
+		PlayerCharacter& firstChr = characters[first];
+		PlayerController& firstCon = players[first];
 		for( Int32 second = first + 1; second < maxUserCount; second++ )
 		{
-			auto& secondChr = characters[second];
-			bool isCollide = IsCollide( firstChr, secondChr );
-			bool isLastCollided = firstChr.GetColliderFillter( secondChr ) || secondChr.GetColliderFillter( firstChr );
-			if( isCollide && !isLastCollided )
-			{
-				firstChr.TurnOnColliderFillter( secondChr );
-				secondChr.TurnOnColliderFillter( firstChr );
-
-				//std::cout << "Collide!" << std::endl;
-
-				Vector normal = firstChr.GetLocation( ) - secondChr.GetLocation( );
-				normal.Normalize( );
-				Vector firstForward = firstChr.GetForward( );
-				Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized( );
-				Vector secondForward = secondChr.GetForward( );
-				Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized( );
-
-				firstChr.SetSpeed( firstReflected * Constant::CharacterDefaultSpeed * 5 );
-				secondChr.SetSpeed( secondReflected * Constant::CharacterDefaultSpeed * 5 );
-
-				while( IsCollide( firstChr, secondChr ) )
-				{
-					firstChr.SetLocation( firstChr.GetLocation( ) + firstReflected * 0.1f );
-					secondChr.SetLocation( secondChr.GetLocation( ) + secondReflected * 0.1f );
-				}
-				firstChr.OnCollide( secondChr );
-				secondChr.OnCollide( firstChr );
-			}
-			else
-			{
-				firstChr.TurnOffColliderFillter( secondChr );
-				secondChr.TurnOffColliderFillter( firstChr );
-			}
+			PlayerCharacter& secondChr = characters[second];
+			CheckCollisionTwoPlayer( firstChr, secondChr );
 		}
-		if( firstChr.GetLocation( ).GetLength( ) > Constant::MapSize )
+		bool isOutOfMap = firstChr.GetLocation( ).GetLength( ) > Constant::MapSize;
+		if( isOutOfMap && firstCon.GetState() != PlayerController::EState::Die )
 		{
-			firstChr.SetLocation( GetSpawnLocation( first ) );
-			firstChr.SetForward( GetSpawnForward( first ) );
-			firstChr.SetSpeed( 0 );
+			firstCon.ChangeState( PlayerController::EState::Die );
 		}
 	}
 }
@@ -171,15 +152,15 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 	}
 }
 
-Game::Vector Game::Room::GetSpawnLocation( UInt32 index )
+Game::Vector Game::Room::GetSpawnLocation( UInt32 index ) const
 {
-	Double angle = 360.0 * ( (Double)( index + 1 ) / (Double)maxUserCount );
+	Double angle = 360.0 * ( static_cast<Double>(index + 1) / static_cast<Double>(maxUserCount) );
 	Double spawnLength = Constant::SpawnPointRatio * Constant::MapSize;
 	Vector spawnPoint = Vector( 0.0, -spawnLength, 0.0 ).Rotated2D( angle );
 	return spawnPoint;
 }
 
-Game::Vector Game::Room::GetSpawnForward( UInt32 index )
+Game::Vector Game::Room::GetSpawnForward( UInt32 index ) const
 {
 	Vector start = GetSpawnLocation( index );
 	Vector end = Vector( 0 );

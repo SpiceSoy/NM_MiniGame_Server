@@ -70,6 +70,7 @@ namespace Game
 		Timer timerRushUse;
 		Timer timerRushGen;
 		Timer timerSpawnStart;
+		Timer timerRespawnStart;
 
 		EMoveState moveState = EMoveState::None;
 		Int32 rushStack = 3;
@@ -81,7 +82,7 @@ namespace Game
 		void SetCharacter( PlayerCharacter* character );
 		void SetRoom( Room* room );
 		void SetPlayerIndex( Int32 playerIndex );
-		void Initialize();
+		void Initialize( );
 
 		template <class PacketType>
 		void SendPacket( const PacketType* buffer );
@@ -90,12 +91,14 @@ namespace Game
 		void Update( Double deltaTime );
 		void OnReceivedPacket( const Packet::Header* ptr );
 		EState GetState( ) const;
+		void ChangeState( EState state );
+		void BroadcastObjectLocation(bool isSetHeight) const;
 	private:
-		void UseRush( );
 		bool CanRush( );
+		void UseRush( );
 		void AddStateFunctions( );
-		void SendStateChangedPacket(EState state) const;
-		void SendStateChangedPacket() const;
+		void SendStateChangedPacket( EState state ) const;
+		void SendStateChangedPacket( ) const;
 	};
 
 	template <class PacketType>

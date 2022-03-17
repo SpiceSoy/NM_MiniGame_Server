@@ -30,7 +30,9 @@ namespace Constant
 	constexpr Double CharacterRotateSpeed = 700.0;
 	constexpr Double CharacterRushSpeed = 1000.0;
 	constexpr Double CharacterFriction = 1000.0f;
+	constexpr Double CharacterMapOutSpeed = 300.0f;
 	constexpr Double DefaultHeight = -84.787506;
+	constexpr Double RespawnHeight = -84.787506;
 
 	// Game
 	constexpr Int32 MaxRushCount = 3;

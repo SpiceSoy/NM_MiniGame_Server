@@ -64,7 +64,7 @@ namespace Game
 		LambdaFSM( )
 			: currentState( static_cast<EStateEnum>( 0 ) )
 		{
-			static_assert( isValid, "EStateEnum is must enum");
+			static_assert( isValid, "EStateEnum is must enum" );
 		}
 
 		void Start( EStateEnum firstState )
@@ -94,25 +94,25 @@ namespace Game
 			auto it = onReceiveInputFunctions.find( currentState );
 			if( it == onReceiveInputFunctions.end( ) )
 			{
-				std::cout << "FSM has unspecific state Input" << static_cast<int>(currentState) << std::endl;
+				std::cout << "FSM has unspecific state Input" << static_cast<int>( currentState ) << std::endl;
 			}
 			else
 			{
 				StateFuncResult<EStateEnum> result = it->second( input );
 				if( result.isChange )
 				{
-					ChangeState( result.nextState, true);
+					ChangeState( result.nextState, true );
 				}
 			}
 		}
-		EStateEnum GetState() const
+		EStateEnum GetState( ) const
 		{
 			return currentState;
 		}
 
-		void AddStateFunctionOnEnter( EStateEnum  state, StateFunctionOnEnter&& function)
+		void AddStateFunctionOnEnter( EStateEnum  state, StateFunctionOnEnter&& function )
 		{
-			onEnterFunctions[state] = std::move(function);
+			onEnterFunctions[state] = std::move( function );
 		}
 		void AddStateFunctionOnEnter( EStateEnum  state, const StateFunctionOnEnter& function )
 		{
@@ -144,6 +144,10 @@ namespace Game
 		void AddStateFunctionOnReceiveInput( EStateEnum  state, const StateFunctionOnReceiveInput& function )
 		{
 			onReceiveInputFunctions[state] = function;
+		}
+		void ChangeState( EStateEnum state )
+		{
+			ChangeState( state, true );
 		}
 
 	private:

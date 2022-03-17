@@ -26,10 +26,12 @@ namespace Packet
 		ServerObjectLocation,
 		ServerPlayerRushCountChanged,
 		ServerObjectStateChanged,
+		ServerChangeMatchingInfo,
+		ServerEndOfMatching,
 		ClientTypeStart = 0x80,
 		ClientRequestFindMatch,
 		ClientRequestCancelMatch,
-		ClientInput
+		ClientInput,
 	};
 	enum class EInputState : Byte
 	{
@@ -47,6 +49,20 @@ namespace Packet
 
 	namespace Server
 	{
+		struct ChangeMatchingInfo
+		{
+			Header header = SERVER_HEADER( ChangeMatchingInfo );
+			Int32 currentUser;
+			Int32 maxUser;
+		};
+
+		struct EndOfMatching
+		{
+			Header header = SERVER_HEADER( EndOfMatching );
+			Int32 yourIndex;
+			Int32 maxUser;
+		};
+
 		struct StartMatch
 		{
 			Header header = SERVER_HEADER( StartMatch );
@@ -67,11 +83,23 @@ namespace Packet
 			Int32 chracterState;
 		};
 
+		struct StartGame
+		{
+			Header header = SERVER_HEADER( ObjectStateChanged );
+		};
+
+		struct RushUsed
+		{
+			Header header = SERVER_HEADER( ObjectStateChanged );
+			Int32 currentRushStack;
+		};
+
 		struct ObjectLocation
 		{
 			Header header = SERVER_HEADER( ObjectLocation );
 			Int32 targetIndex;
 			Int32 chracterState;
+			bool isSetHeight;
 
 			Single locationX;
 			Single locationY;
@@ -96,6 +124,11 @@ namespace Packet
 		struct RequestCancelMatch
 		{
 			Header header = CLIENT_HEADER( RequestCancelMatch );
+		};
+		struct AnswerMatching
+		{
+			Header header = CLIENT_HEADER( RequestCancelMatch );
+			bool isReady;
 		};
 		struct Input
 		{

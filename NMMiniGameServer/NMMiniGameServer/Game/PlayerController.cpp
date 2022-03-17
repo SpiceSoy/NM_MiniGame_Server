@@ -80,6 +80,11 @@ Game::PlayerController::EState Game::PlayerController::GetState( ) const
 	return fsm.GetState( );
 }
 
+void Game::PlayerController::ChangeState( EState state )
+{
+	fsm.ChangeState( state );
+}
+
 void Game::PlayerController::UseRush( )
 {
 	if( ( timerRushUse.IsOver( 1s ) ) )
@@ -99,6 +104,25 @@ bool Game::PlayerController::CanRush( )
 void Game::PlayerController::SendStateChangedPacket( ) const
 {
 	SendStateChangedPacket( this->GetState( ) );
+}
+
+void Game::PlayerController::BroadcastObjectLocation(bool isSetHeight) const
+{
+	Packet::Server::ObjectLocation packet;
+	packet.targetIndex = playerIndex;
+	packet.chracterState = static_cast<Int32>(GetState());
+	packet.isSetHeight = isSetHeight;
+	Vector location = character->GetLocation( );
+	packet.locationX = location.x;
+	packet.locationY = location.y;
+	packet.locationZ = isSetHeight ? Constant::RespawnHeight : Constant::DefaultHeight;
+	//packet.rotation = character.GetRotation();
+	Vector forward = character->GetForward( );
+	packet.forwardX = forward.x;
+	packet.forwardY = forward.y;
+	packet.forwardZ = forward.z;
+
+	room->BroadcastPacket( &packet );
 }
 
 void Game::PlayerController::SendStateChangedPacket( EState state ) const
@@ -125,7 +149,9 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnEnter( EState::Spawn,
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
+			std::cout << "Enter Spawn" << std::endl;
 			this->SendStateChangedPacket( );
+			this->character->SetMoveSpeed(0);
 			this->timerSpawnStart.SetNow( );
 			return StateFuncResult<EState>::NoChange( );
 		}
@@ -278,6 +304,31 @@ void Game::PlayerController::AddStateFunctions( )
 #pragma endregion
 
 #pragma region Die
+	fsm.AddStateFunctionOnEnter( EState::Die,
+		[this] ( EState prevState ) -> StateFuncResult<EState>
+		{
+			std::cout << "Enter Die" << std::endl;
+			timerRespawnStart.SetNow( );
+			Vector outVector = -character->GetLocation( ).Normalized( );
+			character->SetSpeed( outVector * Constant::CharacterMapOutSpeed );
+			return StateFuncResult<EState>::NoChange( );
+		}
+	);
+	fsm.AddStateFunctionOnUpdate( EState::Die,
+		[this] ( Double deltaTime ) -> StateFuncResult<EState>
+		{
+			if( timerRespawnStart.IsOver( 1.5s ) )
+			{
+				character->SetLocation( room->GetSpawnLocation( playerIndex ) );
+				character->SetSpeed( Vector::Zero() );
+				BroadcastObjectLocation(true);
+				return StateFuncResult<EState>( EState::Spawn );
+			}
+			return StateFuncResult<EState>::NoChange( );
+		}
+	);
+	fsm.AddStateFunctionOnReceiveInput( EState::Die, defaultOnInput );
+	fsm.AddStateFunctionOnExit( EState::Die, defaultExit );
 #pragma endregion
 
 
