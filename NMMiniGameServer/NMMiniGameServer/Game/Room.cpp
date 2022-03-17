@@ -91,39 +91,51 @@ void Game::Room::BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUse
 
 void Game::Room::CheckCollision( Double deltaTime )
 {
+	//std::cout << "CollideFrame" << std::endl;
 	for( Int32 first = 0; first < maxUserCount; first++ )
 	{
 		auto& firstChr = characters[first];
 		for( Int32 second = first + 1; second < maxUserCount; second++ )
 		{
 			auto& secondChr = characters[second];
-			if( IsCollide( firstChr, secondChr ) )
+			bool isCollide  = IsCollide(firstChr, secondChr);
+			bool isLastCollided = firstChr.GetColliderFillter(secondChr) || secondChr.GetColliderFillter(firstChr);
+			if( isCollide && !isLastCollided )
 			{
-				std::cout << "Collide" << std::endl;
+				firstChr.TurnOnColliderFillter(secondChr);
+				secondChr.TurnOnColliderFillter(firstChr);
+
+				//std::cout << "Collide!" << std::endl;
 
 				Vector normal = firstChr.GetLocation() - secondChr.GetLocation();
 				normal.Normalize();
 				Vector firstForward = firstChr.GetForward();
-				firstForward = Vector::Reflect( normal, firstForward ).Normalized();
+				Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized();
 				Vector secondForward = secondChr.GetForward();
-				secondForward = Vector::Reflect( -normal, secondForward ).Normalized();
+				Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized();
 
-				firstChr.SetForward( firstForward );
-				secondChr.SetForward( secondForward );
+				firstChr.SetSpeed( firstReflected * Constant::CharacterDefaultSpeed * 5  );
+				secondChr.SetSpeed( secondReflected * Constant::CharacterDefaultSpeed * 5 );
 
 				while( IsCollide( firstChr, secondChr ) )
 				{
-					firstChr.Update( deltaTime );
-					secondChr.Update( deltaTime );
+					firstChr.SetLocation(firstChr.GetLocation() + firstReflected * 0.1f);
+					secondChr.SetLocation(secondChr.GetLocation() + secondReflected * 0.1f);
 				}
 				firstChr.OnCollide( secondChr );
 				secondChr.OnCollide( firstChr );
+			}
+			else
+			{
+				firstChr.TurnOffColliderFillter(secondChr);
+				secondChr.TurnOffColliderFillter(firstChr);
 			}
 		}
 		if( firstChr.GetLocation().GetLength() > Constant::MapSize )
 		{
 			firstChr.SetLocation( GetSpawnLocation( first ) );
 			firstChr.SetForward( GetSpawnForward( first ) );
+			firstChr.SetSpeed(0);
 		}
 	}
 }

@@ -12,6 +12,8 @@
 #pragma once
 #include "Define/DataTypes.h"
 #include "Game/Vector.h"
+#include <chrono>
+
 
 namespace Network
 {
@@ -39,11 +41,19 @@ namespace Game
 			RotateLeft,
 			RotateRight,
 		};
+		using SystemClock = std::chrono::system_clock;
+		using TimePoint = SystemClock::time_point;
+		using Duration = std::chrono::duration<std::chrono::seconds>;
 	private:
 		class PlayerCharacter* character = nullptr;
 		Network::Session* session = nullptr;
 		EMoveState moveState = EMoveState::None;
+		Int32 rushStack = 3;
+		TimePoint allowedRushTime;
+		TimePoint RushGenTime;
 	public:
+		PlayerController();
+		~PlayerController() = default;
 		void SetSession( Network::Session* session );
 		void SetCharacter( PlayerCharacter* character );
 
@@ -55,6 +65,9 @@ namespace Game
 		void OnReceivedPacket( const Packet::Header* ptr );
 	private:
 		void OnReceivedInputPacket( const Packet::Client::Input& packet);
+		void UpdateMove(Double deltaTime);
+		void UseRush();
+		bool CanRush();
 	};
 
 	template <class PacketType>

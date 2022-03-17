@@ -16,7 +16,7 @@
 
 
 Game::PlayerCharacter::PlayerCharacter()
-	: radius( Constant::CharacterRadius ), location(0), speed(0), forward(0,1,0)
+	: radius( Constant::CharacterRadius ), location(0), speed(0), forward(0,1,0), defaultMove(0)
 {
 
 }
@@ -31,9 +31,32 @@ void Game::PlayerCharacter::RotateRight( Double value )
 	forward.Rotate2D( value );
 }
 
-void Game::PlayerCharacter::SetSpeed( Double value )
+const Game::Vector& Game::PlayerCharacter::GetSpeed() const
 {
-	speed = value;
+	return speed;
+}
+
+Game::PlayerCharacter& Game::PlayerCharacter::SetSpeed(const Vector& speed)
+{
+	this->speed = speed;
+	return *this;
+}
+
+Game::PlayerCharacter& Game::PlayerCharacter::AddSpeed(const Vector& speed)
+{
+	this->speed += speed;
+	return *this;
+}
+
+const Double& Game::PlayerCharacter::GetMoveSpeed() const
+{
+	return defaultMove;
+}
+
+Game::PlayerCharacter& Game::PlayerCharacter::SetMoveSpeed(const Double& speed)
+{
+	defaultMove = speed;
+	return *this;
 }
 
 const Game::Vector& Game::PlayerCharacter::GetLocation() const
@@ -79,11 +102,26 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetForward( const Vector& forward 
 
 void Game::PlayerCharacter::Update( Double deltaTime )
 {
-	location += forward * speed * deltaTime;
-	//std::cout << "location : " << location.x << " , " << location.y << " , " << location.z <<  " / rotation : " << rotation <<std::endl;
+	location += (speed + forward * defaultMove) * deltaTime;
+	speed -= speed * deltaTime * 2.0f;
+	//std::cout << "location : " << location.x << " , " << location.y << " , " << location.z << std::endl;
 }
 
 void Game::PlayerCharacter::OnCollide( PlayerCharacter& other )
 {
-	std::cout << "Collide" << std::endl;
+}
+
+void Game::PlayerCharacter::TurnOnColliderFillter(const PlayerCharacter& other)
+{
+	collidFillter.insert(&other);
+}
+
+void Game::PlayerCharacter::TurnOffColliderFillter(const PlayerCharacter& other)
+{
+	collidFillter.erase(&other);
+}
+
+bool Game::PlayerCharacter::GetColliderFillter(const PlayerCharacter& other) const
+{
+	return collidFillter.count(&other);
 }

@@ -16,6 +16,15 @@
 #include "Network/Session.h"
 #include "Game/PlayerCharacter.h"
 
+using namespace std::literals::chrono_literals;
+
+
+Game::PlayerController::PlayerController( )
+{
+	auto now = SystemClock::now( );
+	allowedRushTime = now;
+	RushGenTime = now;
+}
 
 void Game::PlayerController::SetSession( Network::Session* session )
 {
@@ -36,28 +45,7 @@ void Game::PlayerController::SendByte( const Byte* data, UInt64 size )
 void Game::PlayerController::Update( Double deltaTime )
 {
 	if( !character ) return;
-
-	switch( moveState )
-	{
-	case Game::PlayerController::EMoveState::None:
-		break;
-	case Game::PlayerController::EMoveState::MoveForward:
-	{
-	}
-		break;
-	case Game::PlayerController::EMoveState::Rush:
-		break;
-	case Game::PlayerController::EMoveState::RotateLeft:
-	{
-		character->RotateLeft( Constant::CharacterRotateSpeed * deltaTime );
-	}
-		break;
-	case Game::PlayerController::EMoveState::RotateRight:
-	{
-		character->RotateRight( Constant::CharacterRotateSpeed * deltaTime );
-	}
-		break;
-	}
+	UpdateMove( deltaTime );
 }
 
 void Game::PlayerController::OnReceivedPacket( const Packet::Header* ptr )
@@ -73,23 +61,70 @@ void Game::PlayerController::OnReceivedPacket( const Packet::Header* ptr )
 
 void Game::PlayerController::OnReceivedInputPacket( const Packet::Client::Input& packet )
 {
-	if(packet.left == Packet::EInputState::Click)
+	if( packet.left == Packet::EInputState::Click )
 	{
-		session->LogInput("Click Left\n");
-		character->SetSpeed( 0 );
+		session->LogInput( "Click Left\n" );
+		character->SetMoveSpeed( 0 );
 		moveState = EMoveState::RotateLeft;
 	}
-	else if(packet.right == Packet::EInputState::Click)
+	else if( packet.right == Packet::EInputState::Click )
 	{
 		session->LogInput( "Click Right\n" );
-		character->SetSpeed( 0 );
+		character->SetMoveSpeed( 0 );
 		moveState = EMoveState::RotateRight;
 	}
 	else
 	{
-		character->SetSpeed( Constant::CharacterDefaultSpeed );
+		character->SetMoveSpeed( Constant::CharacterDefaultSpeed );
 		moveState = EMoveState::MoveForward;
 	}
+	if( packet.rush == Packet::EInputState::Click )
+	{
+		session->LogInput( "Click Rush\n" );
+		UseRush();
+	}
 
+}
+
+void Game::PlayerController::UpdateMove( Double deltaTime )
+{
+	switch( moveState )
+	{
+	case Game::PlayerController::EMoveState::None:
+		break;
+	case Game::PlayerController::EMoveState::MoveForward:
+	{
+	}
+	break;
+	case Game::PlayerController::EMoveState::Rush:
+
+		break;
+	case Game::PlayerController::EMoveState::RotateLeft:
+	{
+		character->RotateLeft( Constant::CharacterRotateSpeed * deltaTime );
+	}
+	break;
+	case Game::PlayerController::EMoveState::RotateRight:
+	{
+		character->RotateRight( Constant::CharacterRotateSpeed * deltaTime );
+	}
+	break;
+	}
+}
+
+void Game::PlayerController::UseRush( )
+{
+	auto now = SystemClock::now( );
+	if( CanRush() &&  (now > allowedRushTime) )
+	{
+		allowedRushTime = now + 1s;
+		character->AddSpeed( character->GetForward( ) * Constant::CharacterRushSpeed );
+	}
+}
+
+bool Game::PlayerController::CanRush( )
+{
+	auto now = SystemClock::now( );
+	return (RushGenTime < now);
 }
 

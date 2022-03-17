@@ -68,6 +68,7 @@ void Network::Session::ProcessReceive()
 	else
 	{
 		recvBytes += receivedBytes;
+		LogInput("Packet Recv\n");
 
 		Byte* dataBegin = readBuffer.data();
 		Byte* csr = dataBegin;
@@ -76,7 +77,7 @@ void Network::Session::ProcessReceive()
 		while( csr != dataEnd )
 		{
 			Packet::Header* headerPtr = reinterpret_cast<Packet::Header*>(csr);
-			if(headerPtr->Size < recvBytes) // 받은 데이터가 완전하지 않으면
+			if(headerPtr->Size > recvBytes) // 받은 데이터가 완전하지 않으면
 			{
 				break;
 			}
