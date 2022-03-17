@@ -11,6 +11,7 @@
 
 #include "Game/PlayerController.h"
 #include "Game/PlayerCharacter.h"
+#include "Game/Room.h"
 #include "Define/DataTypes.h"
 #include "Define/PacketDefine.h"
 #include "Define/MapData.h"
@@ -21,7 +22,7 @@ using namespace std::literals::chrono_literals;
 
 Game::PlayerController::PlayerController( )
 {
-	this->AddStateFunctions();
+	this->AddStateFunctions( );
 }
 
 void Game::PlayerController::SetSession( Network::Session* session )
@@ -32,6 +33,20 @@ void Game::PlayerController::SetSession( Network::Session* session )
 void Game::PlayerController::SetCharacter( PlayerCharacter* character )
 {
 	this->character = character;
+}
+
+void Game::PlayerController::SetRoom( Room* room )
+{
+	this->room = room;
+}
+
+void Game::PlayerController::SetPlayerIndex( Int32 playerIndex )
+{
+	this->playerIndex = playerIndex;
+}
+
+void Game::PlayerController::Initialize( )
+{
 	fsm.Start( EState::Spawn );
 	timerRushUse.SetNow( );
 	timerRushGen.SetNow( );
@@ -46,7 +61,7 @@ void Game::PlayerController::SendByte( const Byte* data, UInt64 size )
 void Game::PlayerController::Update( Double deltaTime )
 {
 	if( !character ) return;
-	fsm.Update(deltaTime);
+	fsm.Update( deltaTime );
 }
 
 void Game::PlayerController::OnReceivedPacket( const Packet::Header* ptr )
@@ -62,12 +77,12 @@ void Game::PlayerController::OnReceivedPacket( const Packet::Header* ptr )
 
 Game::PlayerController::EState Game::PlayerController::GetState( ) const
 {
-	return fsm.GetState();
+	return fsm.GetState( );
 }
 
 void Game::PlayerController::UseRush( )
 {
-	if(( timerRushUse.IsOver( 1s ) ) )
+	if( ( timerRushUse.IsOver( 1s ) ) )
 	{
 		timerRushUse.SetNow( );
 		character->AddSpeed( character->GetForward( ) * Constant::CharacterRushSpeed );
@@ -81,9 +96,27 @@ bool Game::PlayerController::CanRush( )
 	return rushStack > 0 || timerRushGen.IsOverNow( );
 }
 
+void Game::PlayerController::SendStateChangedPacket( ) const
+{
+	SendStateChangedPacket( this->GetState( ) );
+}
+
+void Game::PlayerController::SendStateChangedPacket( EState state ) const
+{
+	Packet::Server::ObjectStateChanged  packet;
+	packet.targetIndex = this->playerIndex;
+	packet.chracterState = static_cast<Byte>( state );
+	this->room->BroadcastPacket( &packet );
+}
+
 void Game::PlayerController::AddStateFunctions( )
 {
-	auto defaultEnter = [] ( EState prevState ) -> StateFuncResult<EState> { return StateFuncResult<EState>::NoChange( ); };
+	auto defaultEnter = [this] ( EState prevState ) -> StateFuncResult<EState>
+	{
+		this->SendStateChangedPacket( );
+		return StateFuncResult<EState>::NoChange( );
+	};
+
 	auto defaultUpdate = [] ( Double deltaTime ) -> StateFuncResult<EState> { return StateFuncResult<EState>::NoChange( ); };
 	auto defaultOnInput = [] ( const Packet::Client::Input& input ) ->StateFuncResult<EState> { return StateFuncResult<EState>::NoChange( ); };
 	auto defaultExit = [] ( EState nextState )->void {};
@@ -92,6 +125,7 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnEnter( EState::Spawn,
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
+			this->SendStateChangedPacket( );
 			this->timerSpawnStart.SetNow( );
 			return StateFuncResult<EState>::NoChange( );
 		}
@@ -130,6 +164,7 @@ void Game::PlayerController::AddStateFunctions( )
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
 			std::cout << "Change Run" << std::endl;
+			this->SendStateChangedPacket( );
 			this->character->SetMoveSpeed( Constant::CharacterDefaultSpeed );
 			return StateFuncResult<EState>::NoChange( );
 		}
@@ -150,6 +185,7 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnEnter( EState::RotateLeft,
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
+			this->SendStateChangedPacket( EState::Rotate );
 			this->character->SetMoveSpeed( 0 );
 			return StateFuncResult<EState>::NoChange( );
 		}
@@ -176,6 +212,7 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnEnter( EState::RotateRight,
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
+			this->SendStateChangedPacket( EState::Rotate );
 			this->character->SetMoveSpeed( 0 );
 			return StateFuncResult<EState>::NoChange( );
 		}
@@ -202,16 +239,14 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnEnter( EState::Rush,
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
-			std::cout << "enter rush" << std::endl;
-			if( this->CanRush() ) 
+			if( this->CanRush( ) )
 			{
-				std::cout << "can rush" << std::endl;
+				this->SendStateChangedPacket( EState::Rush );
 				this->UseRush( );
 				return StateFuncResult<EState>::NoChange( );
 			}
-			else 
+			else
 			{
-				std::cout << "can't rush" << std::endl;
 				return StateFuncResult<EState>( prevState );
 			}
 			return StateFuncResult<EState>::NoChange( );
@@ -220,12 +255,12 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnUpdate( EState::Rush,
 		[this] ( Double deltaTime ) -> StateFuncResult<EState>
 		{
-			if( this->character->GetSpeed().GetLength() < 20.0f )
+			if( this->character->GetSpeed( ).GetLength( ) < 20.0f )
 			{
 				return StateFuncResult<EState>( EState::Run );
 			}
 			return StateFuncResult<EState>::NoChange( );
-		} 
+		}
 	);
 	fsm.AddStateFunctionOnReceiveInput( EState::Rush, defaultOnInput );
 	fsm.AddStateFunctionOnExit( EState::Rush, defaultExit );
@@ -245,4 +280,5 @@ void Game::PlayerController::AddStateFunctions( )
 
 
 }
+
 

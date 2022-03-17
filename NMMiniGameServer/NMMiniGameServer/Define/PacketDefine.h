@@ -24,6 +24,8 @@ namespace Packet
 		ServerTypeStart = 0,
 		ServerStartMatch,
 		ServerObjectLocation,
+		ServerPlayerRushCountChanged,
+		ServerObjectStateChanged,
 		ClientTypeStart = 0x80,
 		ClientRequestFindMatch,
 		ClientRequestCancelMatch,
@@ -51,6 +53,20 @@ namespace Packet
 			Int32 playerIndex;
 			Int32 userCount;
 		};
+
+		struct PlayerRushCountChanged
+		{
+			Header header = SERVER_HEADER( PlayerRushCountChanged );
+			Int32 count;
+		};
+
+		struct ObjectStateChanged
+		{
+			Header header = SERVER_HEADER( ObjectStateChanged );
+			Int32 targetIndex;
+			Int32 chracterState;
+		};
+
 		struct ObjectLocation
 		{
 			Header header = SERVER_HEADER( ObjectLocation );

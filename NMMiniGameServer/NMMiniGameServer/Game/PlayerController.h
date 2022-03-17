@@ -64,7 +64,8 @@ namespace Game
 	private:
 		class PlayerCharacter* character = nullptr;
 		Network::Session* session = nullptr;
-		class Room * room = nullptr;
+		class Room* room = nullptr;
+		Int32 playerIndex = 0;
 
 		Timer timerRushUse;
 		Timer timerRushGen;
@@ -74,10 +75,13 @@ namespace Game
 		Int32 rushStack = 3;
 		LambdaFSM<EState> fsm;
 	public:
-		PlayerController();
-		~PlayerController() = default;
+		PlayerController( );
+		~PlayerController( ) = default;
 		void SetSession( Network::Session* session );
 		void SetCharacter( PlayerCharacter* character );
+		void SetRoom( Room* room );
+		void SetPlayerIndex( Int32 playerIndex );
+		void Initialize();
 
 		template <class PacketType>
 		void SendPacket( const PacketType* buffer );
@@ -85,11 +89,13 @@ namespace Game
 
 		void Update( Double deltaTime );
 		void OnReceivedPacket( const Packet::Header* ptr );
-		EState GetState() const;
+		EState GetState( ) const;
 	private:
-		void UseRush();
-		bool CanRush();
-		void AddStateFunctions();
+		void UseRush( );
+		bool CanRush( );
+		void AddStateFunctions( );
+		void SendStateChangedPacket(EState state) const;
+		void SendStateChangedPacket() const;
 	};
 
 	template <class PacketType>

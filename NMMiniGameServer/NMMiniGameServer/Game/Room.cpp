@@ -22,7 +22,7 @@ Game::Room::Room( Int32 userCount )
 	characters.resize( userCount );
 }
 
-Game::Room::~Room()
+Game::Room::~Room( )
 {
 
 }
@@ -33,7 +33,8 @@ Game::PlayerController* Game::Room::GetNewPlayerController( Int32 index, Network
 	auto& character = characters[index];
 	instance.SetSession( session );
 	instance.SetCharacter( &character );
-
+	instance.SetRoom( this );
+	instance.SetPlayerIndex( index );
 	character.SetLocation( GetSpawnLocation( index ) );
 	character.SetForward( GetSpawnForward( index ) );
 
@@ -53,13 +54,13 @@ void Game::Room::Update( Double deltaTime )
 		character.Update( deltaTime );
 		Packet::Server::ObjectLocation packet;
 		packet.targetIndex = i;
-		packet.chracterState = static_cast<Byte>(players[i].GetState());
-		Vector location = character.GetLocation();
+		packet.chracterState = static_cast<Byte>( players[i].GetState( ) );
+		Vector location = character.GetLocation( );
 		packet.locationX = location.x;
 		packet.locationY = location.y;
 		packet.locationZ = Constant::DefaultHeight;
 		//packet.rotation = character.GetRotation();
-		Vector forward = character.GetForward();
+		Vector forward = character.GetForward( );
 		packet.forwardX = forward.x;
 		packet.forwardY = forward.y;
 		packet.forwardZ = forward.z;
@@ -68,7 +69,7 @@ void Game::Room::Update( Double deltaTime )
 	}
 }
 
-void Game::Room::ReadyToGame()
+void Game::Room::ReadyToGame( )
 {
 	Packet::Server::StartMatch packet;
 	packet.userCount = maxUserCount;
@@ -98,52 +99,52 @@ void Game::Room::CheckCollision( Double deltaTime )
 		for( Int32 second = first + 1; second < maxUserCount; second++ )
 		{
 			auto& secondChr = characters[second];
-			bool isCollide  = IsCollide(firstChr, secondChr);
-			bool isLastCollided = firstChr.GetColliderFillter(secondChr) || secondChr.GetColliderFillter(firstChr);
+			bool isCollide = IsCollide( firstChr, secondChr );
+			bool isLastCollided = firstChr.GetColliderFillter( secondChr ) || secondChr.GetColliderFillter( firstChr );
 			if( isCollide && !isLastCollided )
 			{
-				firstChr.TurnOnColliderFillter(secondChr);
-				secondChr.TurnOnColliderFillter(firstChr);
+				firstChr.TurnOnColliderFillter( secondChr );
+				secondChr.TurnOnColliderFillter( firstChr );
 
 				//std::cout << "Collide!" << std::endl;
 
-				Vector normal = firstChr.GetLocation() - secondChr.GetLocation();
-				normal.Normalize();
-				Vector firstForward = firstChr.GetForward();
-				Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized();
-				Vector secondForward = secondChr.GetForward();
-				Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized();
+				Vector normal = firstChr.GetLocation( ) - secondChr.GetLocation( );
+				normal.Normalize( );
+				Vector firstForward = firstChr.GetForward( );
+				Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized( );
+				Vector secondForward = secondChr.GetForward( );
+				Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized( );
 
-				firstChr.SetSpeed( firstReflected * Constant::CharacterDefaultSpeed * 5  );
+				firstChr.SetSpeed( firstReflected * Constant::CharacterDefaultSpeed * 5 );
 				secondChr.SetSpeed( secondReflected * Constant::CharacterDefaultSpeed * 5 );
 
 				while( IsCollide( firstChr, secondChr ) )
 				{
-					firstChr.SetLocation(firstChr.GetLocation() + firstReflected * 0.1f);
-					secondChr.SetLocation(secondChr.GetLocation() + secondReflected * 0.1f);
+					firstChr.SetLocation( firstChr.GetLocation( ) + firstReflected * 0.1f );
+					secondChr.SetLocation( secondChr.GetLocation( ) + secondReflected * 0.1f );
 				}
 				firstChr.OnCollide( secondChr );
 				secondChr.OnCollide( firstChr );
 			}
 			else
 			{
-				firstChr.TurnOffColliderFillter(secondChr);
-				secondChr.TurnOffColliderFillter(firstChr);
+				firstChr.TurnOffColliderFillter( secondChr );
+				secondChr.TurnOffColliderFillter( firstChr );
 			}
 		}
-		if( firstChr.GetLocation().GetLength() > Constant::MapSize )
+		if( firstChr.GetLocation( ).GetLength( ) > Constant::MapSize )
 		{
 			firstChr.SetLocation( GetSpawnLocation( first ) );
 			firstChr.SetForward( GetSpawnForward( first ) );
-			firstChr.SetSpeed(0);
+			firstChr.SetSpeed( 0 );
 		}
 	}
 }
 
 bool Game::Room::IsCollide( Game::PlayerCharacter& firstChr, Game::PlayerCharacter& secondChr )
 {
-	Double dist = Vector::Distance( firstChr.GetLocation(), secondChr.GetLocation() );
-	Double sumRadius = firstChr.GetRadius() + secondChr.GetRadius();
+	Double dist = Vector::Distance( firstChr.GetLocation( ), secondChr.GetLocation( ) );
+	Double sumRadius = firstChr.GetRadius( ) + secondChr.GetRadius( );
 	return sumRadius > dist;
 }
 
@@ -166,7 +167,7 @@ Game::Vector Game::Room::GetSpawnLocation( UInt32 index )
 
 Game::Vector Game::Room::GetSpawnForward( UInt32 index )
 {
-	Vector start = GetSpawnLocation(index);
-	Vector end = Vector(0);
-	return (end - start).Normalized();
+	Vector start = GetSpawnLocation( index );
+	Vector end = Vector( 0 );
+	return ( end - start ).Normalized( );
 }
