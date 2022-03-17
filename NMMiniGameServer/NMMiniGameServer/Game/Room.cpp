@@ -77,6 +77,20 @@ void Game::Room::ReadyToGame( )
 	{
 		packet.playerIndex = i; // юс╫ц
 		players[i].SendPacket( &packet );
+		auto& character = characters[i];
+		Packet::Server::ObjectLocation packet;
+		packet.targetIndex = i;
+		packet.chracterState = static_cast<Byte>( players[i].GetState( ) );
+		Vector location = character.GetLocation( );
+		packet.locationX = location.x;
+		packet.locationY = location.y;
+		packet.locationZ = Constant::DefaultHeight;
+		//packet.rotation = character.GetRotation();
+		Vector forward = character.GetForward( );
+		packet.forwardX = forward.x;
+		packet.forwardY = forward.y;
+		packet.forwardZ = forward.z;
+		players[i].Initialize( );
 	}
 }
 
