@@ -24,11 +24,21 @@ namespace Game
 {
 	class Room
 	{
+		enum class EState
+		{
+			Opend,
+			Waited,
+			Doing,
+			End,
+			Closed
+		};
 	private:
 		Int32 currentUserCount = 0;
 		const Int32 maxUserCount = 0;
 		std::vector<PlayerController> players;
 		std::vector<PlayerCharacter> characters;
+		Timer startTime;
+		EState state;
 	public:
 		Room(Int32 userCount);
 		~Room();
@@ -48,12 +58,16 @@ namespace Game
 		void CheckCollisionTwoPlayer(Game::PlayerCharacter& firstChr, Game::PlayerCharacter& secondChr);
 		Vector GetSpawnLocation(UInt32 index) const;
 		Vector GetSpawnForward( UInt32 index ) const;
+		EState GetState() const;
+		void SetState(EState state);
 	private:
 		void CheckCollision( Double deltaTime);
 
 		bool IsCollide( Game::PlayerCharacter& firstChr, Game::PlayerCharacter& secondChr );
 
 		void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser );
+		void BroadcastStartGame();
+		void BroadcastEndGame();
 
 	};
 

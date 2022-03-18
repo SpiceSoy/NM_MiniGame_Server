@@ -16,7 +16,7 @@
 
 
 Game::Room::Room( Int32 userCount )
-	: maxUserCount( userCount )
+	: maxUserCount( userCount ), state( EState::Opend )
 {
 	players.resize( userCount );
 	characters.resize( userCount );
@@ -55,6 +55,18 @@ void Game::Room::Update( Double deltaTime )
 		character.Update( deltaTime );
 		controller.BroadcastObjectLocation( false );
 	}
+	// 시작했는가?
+	if( state == EState::Waited && startTime.IsOverNow( ) )
+	{
+		SetState( EState::Doing );
+		BroadcastStartGame( );
+	}
+	// 끝났는가?
+	if( state == EState::Doing && startTime.IsOver( Constant::GameLengthSeconds ) )
+	{
+		SetState( EState::End );
+		BroadcastEndGame();
+	}
 }
 
 void Game::Room::ReadyToGame( )
@@ -71,6 +83,9 @@ void Game::Room::ReadyToGame( )
 		players[i].BroadcastObjectLocation( true );
 		players[i].Initialize( );
 	}
+	SetState( EState::Waited );
+	startTime.SetNow( ).Add( Constant::FirstSpawnWaitSeconds );
+	
 }
 
 void Game::Room::BroadcastByte( const Byte* data, UInt32 size )
@@ -155,6 +170,18 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 	}
 }
 
+void Game::Room::BroadcastStartGame( )
+{
+	Packet::Server::StartGame packet;
+	BroadcastPacket( &packet );
+}
+
+void Game::Room::BroadcastEndGame( )
+{
+	Packet::Server::EndGame packet;
+	BroadcastPacket( &packet );
+}
+
 Game::Vector Game::Room::GetSpawnLocation( UInt32 index ) const
 {
 	Double angle = 360.0 * ( static_cast<Double>( index + 1 ) / static_cast<Double>( maxUserCount ) );
@@ -168,4 +195,14 @@ Game::Vector Game::Room::GetSpawnForward( UInt32 index ) const
 	Vector start = GetSpawnLocation( index );
 	Vector end = Vector( 0 );
 	return ( end - start ).Normalized( );
+}
+
+Game::Room::EState Game::Room::GetState( ) const
+{
+	return state;
+}
+
+void Game::Room::SetState( EState state )
+{
+	this->state = state;
 }

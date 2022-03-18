@@ -87,6 +87,11 @@ namespace Packet
 		{
 			Header header = SERVER_HEADER( ObjectStateChanged );
 		};
+		struct EndGame
+		{
+			Header header = SERVER_HEADER( ObjectStateChanged );
+			Int32 scores[6];
+		};
 
 		struct RushUsed
 		{

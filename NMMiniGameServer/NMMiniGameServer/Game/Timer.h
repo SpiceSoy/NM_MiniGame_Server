@@ -22,7 +22,7 @@ namespace Game
 	struct Timer
 	{
 		using SystemClock = std::chrono::system_clock;
-		using TimePoint = SystemClock::time_point;
+		using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double, std::ratio<1, 10000000>> >;
 		using Duration = std::chrono::duration<std::chrono::milliseconds>;
 		TimePoint point;
 
@@ -34,7 +34,7 @@ namespace Game
 		template<typename DurationType>
 		Timer& Add( const DurationType& duration )
 		{
-			point += duration;
+			point = point + duration;
 			return *this;
 		}
 
