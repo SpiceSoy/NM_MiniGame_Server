@@ -18,71 +18,71 @@
 
 namespace Game
 {
-	class PlayerController;
-	class Room;
+    class PlayerController;
+    class Room;
 };
+
 
 namespace Packet
 {
-	struct Header;
+    struct Header;
 };
+
 
 namespace Network
 {
-	class Session
-	{
-	public:
-		enum class EState
-		{
-			Wait,
-			QueueingMatch,
-			InRoom,
-			Closed,
-			Empty
-		};
-	private:
-		SocketHandle socket;
+    class Session
+    {
+    public:
+        enum class EState
+        {
+            Wait,
+            QueueingMatch,
+            InRoom,
+            Closed,
+            Empty
+        };
 
-		UInt64 recvBytes = 0;
-		std::vector<Byte> readBuffer;
+    private:
+        SocketHandle socket;
 
-		UInt64 sendBytes = 0;
-		std::vector<Byte> sendBuffer;
+        UInt64 recvBytes = 0;
+        std::vector< Byte > readBuffer;
 
-		std::string id;
-		std::string addressText;
-		UInt16 port;
+        UInt64 sendBytes = 0;
+        std::vector< Byte > sendBuffer;
 
-		EState state = EState::Wait;
-		Game::PlayerController* contoller = nullptr;
-		Game::Room* room = nullptr;
-		class Server* server = nullptr; // 매칭용, 이후에 매치메이커로 바꿔야함.
+        std::string id;
+        std::string addressText;
+        UInt16 port;
 
-	public:
-		Session( SocketHandle socket, class Server* server);
+        EState state = EState::Wait;
+        Game::PlayerController* contoller = nullptr;
+        Game::Room* room = nullptr;
+        class Server* server = nullptr; // 매칭용, 이후에 매치메이커로 바꿔야함.
 
-		SocketHandle GetSocket() const;
-		Bool HasSendBytes() const;
-		const std::string& GetId() const;
-		const std::string& GetAddress() const;
-		UInt16 GetPort() const;
-		EState GetState() const;
-		Bool IsClosed() const;
-	public:
-		void SetState( EState state );
-		void ProcessSend();
-		void ProcessReceive();
+    public:
+        Session( SocketHandle socket, class Server* server );
 
-		void Close();
-		void SetAddress( const Char* address, UInt16 port );
-		void LogInput( const Char* input ) const;
-		void SendByte( const Byte* data, UInt64 size );
-		void OnReceivedPacketInWaitting( const Packet::Header* data);
+        SocketHandle GetSocket() const;
+        Bool HasSendBytes() const;
+        const std::string& GetId() const;
+        const std::string& GetAddress() const;
+        UInt16 GetPort() const;
+        EState GetState() const;
+        Bool IsClosed() const;
+    public:
+        void SetState( EState state );
+        void ProcessSend();
+        void ProcessReceive();
 
-		void SetRoom( Game::Room* room );
-		void SetController( Game::PlayerController* contoller );
-	};
+        void Close();
+        void SetAddress( const Char* address, UInt16 port );
+        void LogInput( const Char* input ) const;
+        void SendByte( const Byte* data, UInt64 size );
+        void OnReceivedPacketInWaitting( const Packet::Header* data );
 
-
-
+        void SetRoom( Game::Room* room );
+        void SetController( Game::PlayerController* contoller );
+    };
 };

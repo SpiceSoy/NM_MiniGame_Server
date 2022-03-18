@@ -17,71 +17,73 @@
 
 namespace Network
 {
-	class Session;
+    class Session;
 };
+
 
 namespace Game
 {
-	enum class ERoomState
-	{
-		Opened,
-		Waited,
-		Doing,
-		End,
-		Closed
-	};
+    enum class ERoomState
+    {
+        Opened,
+        Waited,
+        Doing,
+        End,
+        Closed
+    };
 
-	class Room
-	{
-	private:
-		Int32 currentUserCount = 0;
-		const Int32 maxUserCount = 0;
-		std::vector<PlayerController> players;
-		std::vector<PlayerCharacter> characters;
-		Timer startTime;
-		ERoomState state;
-	public:
-		Room(Int32 userCount);
-		~Room();
-		PlayerController* GetNewPlayerController(Int32 index, Network::Session* session );
-		void Update( Double deltaTime );
+    class Room
+    {
+    private:
+        Int32 currentUserCount = 0;
+        const Int32 maxUserCount = 0;
+        std::vector< PlayerController > players;
+        std::vector< PlayerCharacter > characters;
+        Timer startTime;
+        ERoomState state;
+    public:
+        Room( Int32 userCount );
+        ~Room();
+        PlayerController* GetNewPlayerController( Int32 index, Network::Session* session );
+        void Update( Double deltaTime );
 
-		void ReadyToGame();
+        void ReadyToGame();
 
-		template <class PacketType>
-		void BroadcastPacket( const PacketType* buffer);
+        template < class PacketType >
+        void BroadcastPacket( const PacketType* buffer );
 
-		template <class PacketType>
-		void BroadcastPacket( const PacketType* buffer, Int32 expectedUserIndex );
+        template < class PacketType >
+        void BroadcastPacket( const PacketType* buffer, Int32 expectedUserIndex );
 
-		void BroadcastByte( const Byte* data, UInt32 size );
-		void BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex );
-		void CheckCollisionTwoPlayer(Game::PlayerCharacter& firstChr, Game::PlayerCharacter& secondChr);
-		Vector GetSpawnLocation(UInt32 index) const;
-		Vector GetSpawnForward( UInt32 index ) const;
-		ERoomState GetState() const;
-		void SetState( ERoomState state);
-	private:
-		void CheckCollision( Double deltaTime);
+        void BroadcastByte( const Byte* data, UInt32 size );
+        void BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex );
+        void CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr );
+        Vector GetSpawnLocation( UInt32 index ) const;
+        Vector GetSpawnForward( UInt32 index ) const;
+        ERoomState GetState() const;
+        void SetState( ERoomState state );
+    private:
+        void CheckCollision( Double deltaTime );
 
-		bool IsCollide( Game::PlayerCharacter& firstChr, Game::PlayerCharacter& secondChr );
+        bool IsCollide( PlayerCharacter& firstChr, PlayerCharacter& secondChr );
 
-		void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser );
-		void BroadcastStartGame();
-		void BroadcastEndGame();
-		void LogLine( const char* format, ... ) const;
-	};
+        void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser );
+        void BroadcastStartGame();
+        void BroadcastEndGame();
+        void LogLine( const char* format, ... ) const;
+    };
 
-	// 템플릿 함수들
-	template <class PacketType>
-	void Game::Room::BroadcastPacket( const PacketType* buffer )
-	{
-		BroadcastByte( reinterpret_cast<const Byte*>( buffer ), sizeof( PacketType ) );
-	}
+    // 템플릿 함수들
+    template < class PacketType >
+    void Room::BroadcastPacket( const PacketType* buffer )
+    {
+        BroadcastByte( reinterpret_cast< const Byte* >( buffer ), sizeof( PacketType ) );
+    }
 
-	template <class PacketType>
-	void Game::Room::BroadcastPacket( const PacketType* buffer, Int32 expectedUserIndex )
-	{
-		BroadcastByte( reinterpret_cast<const Byte*>( buffer ), sizeof( PacketType ), expectedUserIndex );
-	}
+
+    template < class PacketType >
+    void Room::BroadcastPacket( const PacketType* buffer, Int32 expectedUserIndex )
+    {
+        BroadcastByte( reinterpret_cast< const Byte* >( buffer ), sizeof( PacketType ), expectedUserIndex );
+    }
 }

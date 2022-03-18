@@ -18,162 +18,179 @@
 #include <iostream>
 #include <array>
 
+
 Network::Session::Session( SocketHandle socket, class Server* server )
-	: socket( socket ), port( 0 ), server(server)
+    : socket( socket ), port( 0 ), server( server )
 {
-	readBuffer.resize( 1024 );
-	sendBuffer.resize( 1024 );
+    readBuffer.resize( 1024 );
+    sendBuffer.resize( 1024 );
 }
+
 
 SocketHandle Network::Session::GetSocket() const
 {
-	return socket;
+    return socket;
 }
+
 
 Bool Network::Session::HasSendBytes() const
 {
-	return sendBytes;
+    return sendBytes;
 }
+
 
 void Network::Session::SetState( EState state )
 {
-	this->state = state;
+    this->state = state;
 }
+
 
 void Network::Session::ProcessSend()
 {
-	Int32 sentBytes = send( socket, (const char*)sendBuffer.data(), sendBytes, 0 );
-	if( sentBytes == SOCKET_ERROR )
-	{
-		PrintLastErrorMessage( "send", __FILE__, __LINE__ );
-		Close();
-	}
-	else
-	{
-		//메모리 땡기기
-		memcpy_s( sendBuffer.data(), sendBytes - sentBytes, sendBuffer.data() + sentBytes, sendBytes - sentBytes );
-		sendBytes -= sentBytes;
-	}
+    Int32 sentBytes = send( socket, ( const char* )sendBuffer.data(), sendBytes, 0 );
+    if ( sentBytes == SOCKET_ERROR )
+    {
+        PrintLastErrorMessage( "send", __FILE__, __LINE__ );
+        Close();
+    }
+    else
+    {
+        //메모리 땡기기
+        memcpy_s( sendBuffer.data(), sendBytes - sentBytes, sendBuffer.data() + sentBytes, sendBytes - sentBytes );
+        sendBytes -= sentBytes;
+    }
 }
+
 
 void Network::Session::ProcessReceive()
 {
-	// 이름 겹쳐서 로컬변수 전문 작성
-	Int32 receivedBytes = recv( socket, ( (char*)readBuffer.data() ) + recvBytes, readBuffer.size() * sizeof( Byte ) - recvBytes, 0 );
-	Char* expectEnd = reinterpret_cast<Char*>( readBuffer.data() + recvBytes + receivedBytes - 1 );
-	if( receivedBytes == 0 || receivedBytes == SOCKET_ERROR )
-	{
-		Close();
-	}
-	else
-	{
-		recvBytes += receivedBytes;
-		//LogInput("Packet Recv\n");
+    // 이름 겹쳐서 로컬변수 전문 작성
+    Int32 receivedBytes = recv( socket, ( ( char* )readBuffer.data() ) + recvBytes,
+                                readBuffer.size() * sizeof( Byte ) - recvBytes, 0 );
+    Char* expectEnd = reinterpret_cast< Char* >( readBuffer.data() + recvBytes + receivedBytes - 1 );
+    if ( receivedBytes == 0 || receivedBytes == SOCKET_ERROR )
+        Close();
+    else
+    {
+        recvBytes += receivedBytes;
+        //LogInput("Packet Recv\n");
 
-		Byte* dataBegin = readBuffer.data();
-		Byte* csr = dataBegin;
-		Byte* dataEnd = readBuffer.data() + recvBytes;
+        Byte* dataBegin = readBuffer.data();
+        Byte* csr = dataBegin;
+        Byte* dataEnd = readBuffer.data() + recvBytes;
 
-		while( csr != dataEnd )
-		{
-			Packet::Header* headerPtr = reinterpret_cast<Packet::Header*>(csr);
-			if(headerPtr->Size > recvBytes) // 받은 데이터가 완전하지 않으면
-			{
-				break;
-			}
-			else // 완전하면
-			{
-				//패킷 처리
-				if(contoller) contoller->OnReceivedPacket( headerPtr );
-				else OnReceivedPacketInWaitting( headerPtr );
+        while ( csr != dataEnd )
+        {
+            Packet::Header* headerPtr = reinterpret_cast< Packet::Header* >( csr );
+            if ( headerPtr->Size > recvBytes ) // 받은 데이터가 완전하지 않으면
+                break;
+            // 완전하면
+            //패킷 처리
+            if ( contoller )
+                contoller->OnReceivedPacket( headerPtr );
+            else
+                OnReceivedPacketInWaitting( headerPtr );
 
-				//커서 이동
-				csr += headerPtr->Size;
-				recvBytes -= headerPtr->Size;
-			}
-
-		}
-		if(csr != dataBegin && csr != dataEnd)
-		{
-			Int32 remainDatas = dataEnd - csr;
-			memcpy_s(dataBegin, remainDatas, csr, remainDatas );
-		}
-
-	}
+            //커서 이동
+            csr += headerPtr->Size;
+            recvBytes -= headerPtr->Size;
+        }
+        if ( csr != dataBegin && csr != dataEnd )
+        {
+            Int32 remainDatas = dataEnd - csr;
+            memcpy_s( dataBegin, remainDatas, csr, remainDatas );
+        }
+    }
 }
+
 
 void Network::Session::Close()
 {
-	if( socket == 0 ) return;
-	closesocket( this->socket );
-	SetState( EState::Closed );
-	if(contoller) contoller->SetSession(nullptr);
+    if ( socket == 0 )
+        return;
+    closesocket( this->socket );
+    SetState( EState::Closed );
+    if ( contoller )
+        contoller->SetSession( nullptr );
 }
+
 
 const std::string& Network::Session::GetId() const
 {
-	return id;
+    return id;
 }
+
 
 const std::string& Network::Session::GetAddress() const
 {
-	return addressText;
+    return addressText;
 }
+
 
 UInt16 Network::Session::GetPort() const
 {
-	return port;
+    return port;
 }
+
 
 Network::Session::EState Network::Session::GetState() const
 {
-	return state;
+    return state;
 }
+
 
 Bool Network::Session::IsClosed() const
 {
-	return state == EState::Closed;
+    return state == EState::Closed;
 }
 
 
 void Network::Session::SetAddress( const Char* address, UInt16 port )
 {
-	addressText = address;
-	this->port = port;
+    addressText = address;
+    this->port = port;
 }
+
 
 void Network::Session::SendByte( const Byte* data, UInt64 size )
 {
-	if( IsClosed() ) return;
-	bool willOver = sendBytes + size > sendBuffer.size();
-	if( willOver ) sendBuffer.resize( sendBuffer.size() * 2 );
-	memcpy_s( sendBuffer.data() + sendBytes, size, data, size );
-	sendBytes += size;
+    if ( IsClosed() )
+        return;
+    bool willOver = sendBytes + size > sendBuffer.size();
+    if ( willOver )
+        sendBuffer.resize( sendBuffer.size() * 2 );
+    memcpy_s( sendBuffer.data() + sendBytes, size, data, size );
+    sendBytes += size;
 }
+
 
 void Network::Session::OnReceivedPacketInWaitting( const Packet::Header* data )
 {
-	if(data->Type == Packet::EType::ClientRequestFindMatch)
-	{
-		LogInput("Request Match Find Recv\n");
-		RequestMatch req;
-		req.requester = this;
-		if(server) server->AddRequest(req);
-	}
+    if ( data->Type == Packet::EType::ClientRequestFindMatch )
+    {
+        LogInput( "Request Match Find Recv\n" );
+        RequestMatch req;
+        req.requester = this;
+        if ( server )
+            server->AddRequest( req );
+    }
 }
+
 
 void Network::Session::SetRoom( Game::Room* room )
 {
-	this->room = room;
-	LogInput("Enter Room\n");
+    this->room = room;
+    LogInput( "Enter Room\n" );
 }
+
 
 void Network::Session::SetController( Game::PlayerController* contoller )
 {
-	this->contoller = contoller;
+    this->contoller = contoller;
 }
+
 
 void Network::Session::LogInput( const Char* input ) const
 {
-	printf_s( "%s:%d / %s : %s", addressText.c_str(), port, id.c_str(), input );
+    printf_s( "%s:%d / %s : %s", addressText.c_str(), port, id.c_str(), input );
 }

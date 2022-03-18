@@ -13,9 +13,11 @@
 #include "Define/DataTypes.h"
 
 #define PrintLastErrorMessageInFile(title)  Network::PrintLastErrorMessage(title, __FILE__, __LINE__)
+
+
 namespace Network
 {
-	Char* GetErrorMessageString( Int32 err );
-	Void PrintErrorMessage( const Char* title, const Char* message, const Char* file, Int32 line );
-	Void PrintLastErrorMessage( const Char* title, const Char* file, Int32 line );
+    Char* GetErrorMessageString( Int32 err );
+    Void PrintErrorMessage( const Char* title, const Char* message, const Char* file, Int32 line );
+    Void PrintLastErrorMessage( const Char* title, const Char* file, Int32 line );
 }

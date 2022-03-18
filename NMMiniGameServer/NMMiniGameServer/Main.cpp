@@ -11,18 +11,18 @@
 
 #include "Network/Server.h"
 #include "Game/Room.h"
-#include <iostream>	
+#include <iostream>
 #include <WinSock2.h>
 
 
 constexpr Int32 DEFAULT_PORT = 4000;
 
 
-int main( int argc, char* argv[] )
+int main( int argc, char* argv[ ] )
 {
-	Int32 port = argc == 1 ? DEFAULT_PORT : atoi( argv[1] );
-	Network::Server server;
-	server.Initialize( static_cast<UInt16>( port ) );
-	server.Process();
-	return 0;
+    Int32 port = argc == 1 ? DEFAULT_PORT : atoi( argv[ 1 ] );
+    Network::Server server;
+    server.Initialize( static_cast< UInt16 >( port ) );
+    server.Process();
+    return 0;
 }

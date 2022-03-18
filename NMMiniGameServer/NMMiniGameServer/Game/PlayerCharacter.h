@@ -17,44 +17,41 @@
 
 namespace Game
 {
-	class PlayerCharacter
-	{
+    class PlayerCharacter
+    {
+    private:
+        Vector location;
+        Vector speed;
+        Vector forward;
+        Double defaultMove;
+        Double radius;
+        std::set< const void* > collidFillter; // 한번만 충돌되도록 필터링합니다.
+    public:
+        PlayerCharacter();
+        void RotateLeft( Double value );
+        void RotateRight( Double value );
 
-	private:
-		Vector location;
-		Vector speed;
-		Vector forward;
-		Double defaultMove;
-		Double radius;
-		std::set<const void*> collidFillter; // 한번만 충돌되도록 필터링합니다.
-	public:
-		PlayerCharacter();
-		void RotateLeft( Double value );
-		void RotateRight( Double value );
+        const Vector& GetSpeed() const;
+        PlayerCharacter& SetSpeed( const Vector& speed );
+        PlayerCharacter& AddSpeed( const Vector& speed );
 
-		const Vector& GetSpeed() const;
-		PlayerCharacter& SetSpeed( const Vector& speed );
-		PlayerCharacter& AddSpeed(const Vector& speed);
+        const Double& GetMoveSpeed() const;
+        PlayerCharacter& SetMoveSpeed( const Double& speed );
 
-		const Double& GetMoveSpeed() const;
-		PlayerCharacter& SetMoveSpeed(const Double& speed);
+        const Vector& GetLocation() const;
+        PlayerCharacter& SetLocation( const Vector& location );
 
-		const Vector& GetLocation() const;
-		PlayerCharacter& SetLocation( const Vector& location );
+        const Double& GetRadius() const;
+        PlayerCharacter& SetRadius( Double radius );
 
-		const Double& GetRadius() const;
-		PlayerCharacter& SetRadius( Double radius );
+        PlayerCharacter& SetRotation( Double rotation );
 
-		PlayerCharacter& SetRotation( Double rotation );
-
-		const Vector& GetForward() const;
-		Vector GetFinalSpeed() const;
-		PlayerCharacter& SetForward( const Vector& forward );
-		void Update( Double deltaTime );
-		void OnCollide(PlayerCharacter& other);
-		void TurnOnColliderFillter(const PlayerCharacter& other);
-		void TurnOffColliderFillter(const PlayerCharacter& other);
-		bool GetColliderFillter(const PlayerCharacter& other) const;
-
-	};
+        const Vector& GetForward() const;
+        Vector GetFinalSpeed() const;
+        PlayerCharacter& SetForward( const Vector& forward );
+        void Update( Double deltaTime );
+        void TurnOnColliderFillter( const PlayerCharacter& other );
+        void TurnOffColliderFillter( const PlayerCharacter& other );
+        bool GetColliderFillter( const PlayerCharacter& other ) const;
+    };
 };

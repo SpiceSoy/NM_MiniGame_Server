@@ -19,134 +19,141 @@
 
 namespace Packet
 {
-	enum class EType : Byte
-	{
-		ServerTypeStart = 0,
-		ServerStartMatch,
-		ServerObjectLocation,
-		ServerPlayerRushCountChanged,
-		ServerObjectStateChanged,
-		ServerChangeMatchingInfo,
-		ServerEndOfMatching,
-		ServerEndGame,
-		ServerRushUsed,
-		ServerStartGame,
-		ClientTypeStart = 0x80,
-		ClientRequestFindMatch,
-		ClientRequestCancelMatch,
-		ClientInput,
-	};
-	enum class EInputState : Byte
-	{
-		None,
-		Click,
-		Press,
-		Release,
-	};
+    enum class EType : Byte
+    {
+        ServerTypeStart = 0,
+        ServerStartMatch,
+        ServerObjectLocation,
+        ServerPlayerRushCountChanged,
+        ServerObjectStateChanged,
+        ServerChangeMatchingInfo,
+        ServerEndOfMatching,
+        ServerEndGame,
+        ServerRushUsed,
+        ServerStartGame,
+        ClientTypeStart = 0x80,
+        ClientRequestFindMatch,
+        ClientRequestCancelMatch,
+        ClientInput,
+    };
 
-	struct Header
-	{
-		Byte Size;
-		EType Type;
-	};
+    enum class EInputState : Byte
+    {
+        None,
+        Click,
+        Press,
+        Release,
+    };
 
-	namespace Server
-	{
-		struct ChangeMatchingInfo
-		{
-			Header header = SERVER_HEADER( ChangeMatchingInfo );
-			Int32 currentUser;
-			Int32 maxUser;
-		};
+    struct Header
+    {
+        Byte Size;
+        EType Type;
+    };
 
-		struct EndOfMatching
-		{
-			Header header = SERVER_HEADER( EndOfMatching );
-			Int32 yourIndex;
-			Int32 maxUser;
-		};
 
-		struct StartMatch
-		{
-			Header header = SERVER_HEADER( StartMatch );
-			Int32 playerIndex;
-			Int32 userCount;
-		};
+    namespace Server
+    {
+        struct ChangeMatchingInfo
+        {
+            Header header = SERVER_HEADER( ChangeMatchingInfo );
+            Int32 currentUser;
+            Int32 maxUser;
+        };
 
-		struct PlayerRushCountChanged
-		{
-			Header header = SERVER_HEADER( PlayerRushCountChanged );
-			Int32 count;
-		};
+        struct EndOfMatching
+        {
+            Header header = SERVER_HEADER( EndOfMatching );
+            Int32 yourIndex;
+            Int32 maxUser;
+        };
 
-		struct ObjectStateChanged
-		{
-			Header header = SERVER_HEADER( ObjectStateChanged );
-			Int32 targetIndex;
-			Int32 chracterState;
-		};
+        struct StartMatch
+        {
+            Header header = SERVER_HEADER( StartMatch );
+            Int32 playerIndex;
+            Int32 userCount;
+        };
 
-		struct StartGame
-		{
-			Header header = SERVER_HEADER( StartGame );
-			Int32 GameTime;
-		};
-		struct EndGame
-		{
-			Header header = SERVER_HEADER( EndGame );
-			Int32 scores[6];
-		};
+        struct PlayerRushCountChanged
+        {
+            Header header = SERVER_HEADER( PlayerRushCountChanged );
+            Int32 count;
+        };
 
-		struct RushUsed
-		{
-			Header header = SERVER_HEADER( RushUsed );
-			Int32 currentRushStack;
-		};
+        struct ObjectStateChanged
+        {
+            Header header = SERVER_HEADER( ObjectStateChanged );
+            Int32 targetIndex;
+            Int32 chracterState;
+        };
 
-		struct ObjectLocation
-		{
-			Header header = SERVER_HEADER( ObjectLocation );
-			Int32 targetIndex;
-			Int32 chracterState;
-			bool isSetHeight;
+        struct StartGame
+        {
+            Header header = SERVER_HEADER( StartGame );
+            Int32 GameTime;
+        };
 
-			Single locationX;
-			Single locationY;
-			Single locationZ;
+        struct EndGame
+        {
+            Header header = SERVER_HEADER( EndGame );
+            Int32 scores[ 6 ];
+        };
 
-			Single forwardX;
-			Single forwardY;
-			Single forwardZ;
+        struct RushUsed
+        {
+            Header header = SERVER_HEADER( RushUsed );
+            Int32 currentRushStack;
+        };
 
-			Single velocityX;
-			Single velocityY;
-			Single velocityZ;
-		};
-	};
+        struct ObjectLocation
+        {
+            Header header = SERVER_HEADER( ObjectLocation );
+            Int32 targetIndex;
+            Int32 chracterState;
+            bool isSetHeight;
 
-	namespace Client
-	{
-		struct RequestFindMatch
-		{
-			Header header = CLIENT_HEADER( RequestFindMatch );
-		};
-		struct RequestCancelMatch
-		{
-			Header header = CLIENT_HEADER( RequestCancelMatch );
-		};
-		struct AnswerMatching
-		{
-			Header header = CLIENT_HEADER( RequestCancelMatch );
-			bool isReady;
-		};
-		struct Input
-		{
-			Header header = CLIENT_HEADER( Input );
-			EInputState left;
-			EInputState right;
-			EInputState rush;
-		};
-	};
+            Single locationX;
+            Single locationY;
+            Single locationZ;
+
+            Single forwardX;
+            Single forwardY;
+            Single forwardZ;
+
+            Single velocityX;
+            Single velocityY;
+            Single velocityZ;
+        };
+    };
+
+
+    namespace Client
+    {
+        struct RequestFindMatch
+        {
+            Header header = CLIENT_HEADER( RequestFindMatch );
+        };
+
+        struct RequestCancelMatch
+        {
+            Header header = CLIENT_HEADER( RequestCancelMatch );
+        };
+
+        struct AnswerMatching
+        {
+            Header header = CLIENT_HEADER( RequestCancelMatch );
+            bool isReady;
+        };
+
+        struct Input
+        {
+            Header header = CLIENT_HEADER( Input );
+            EInputState left;
+            EInputState right;
+            EInputState rush;
+        };
+    };
 };
 
 

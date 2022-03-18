@@ -14,130 +14,140 @@
 #include "Define/MapData.h"
 #include <iostream>
 
-Game::PlayerCharacter::PlayerCharacter( )
-	: radius( Constant::CharacterRadius ), location( 0 ), speed( 0 ), forward( 0, 1, 0 ), defaultMove( 0 )
-{
 
+Game::PlayerCharacter::PlayerCharacter()
+    : location( 0 ), speed( 0 ), forward( 0, 1, 0 ), defaultMove( 0 ), radius( Constant::CharacterRadius )
+{
 }
+
 
 void Game::PlayerCharacter::RotateLeft( Double value )
 {
-	forward.Rotate2D( -value );
+    forward.Rotate2D( -value );
 }
+
 
 void Game::PlayerCharacter::RotateRight( Double value )
 {
-	forward.Rotate2D( value );
+    forward.Rotate2D( value );
 }
 
-const Game::Vector& Game::PlayerCharacter::GetSpeed( ) const
+
+const Game::Vector& Game::PlayerCharacter::GetSpeed() const
 {
-	return speed;
+    return speed;
 }
+
 
 Game::PlayerCharacter& Game::PlayerCharacter::SetSpeed( const Vector& speed )
 {
-	this->speed = speed;
-	return *this;
+    this->speed = speed;
+    return *this;
 }
+
 
 Game::PlayerCharacter& Game::PlayerCharacter::AddSpeed( const Vector& speed )
 {
-	this->speed += speed;
-	return *this;
+    this->speed += speed;
+    return *this;
 }
 
-const Double& Game::PlayerCharacter::GetMoveSpeed( ) const
+
+const Double& Game::PlayerCharacter::GetMoveSpeed() const
 {
-	return defaultMove;
+    return defaultMove;
 }
+
 
 Game::PlayerCharacter& Game::PlayerCharacter::SetMoveSpeed( const Double& speed )
 {
-	defaultMove = speed;
-	return *this;
+    defaultMove = speed;
+    return *this;
 }
 
-const Game::Vector& Game::PlayerCharacter::GetLocation( ) const
+
+const Game::Vector& Game::PlayerCharacter::GetLocation() const
 {
-	return location;
+    return location;
 }
+
 
 Game::PlayerCharacter& Game::PlayerCharacter::SetLocation( const Vector& location )
 {
-	this->location = location;
-	return *this;
+    this->location = location;
+    return *this;
 }
 
-const Double& Game::PlayerCharacter::GetRadius( ) const
+
+const Double& Game::PlayerCharacter::GetRadius() const
 {
-	return radius;
+    return radius;
 }
+
 
 Game::PlayerCharacter& Game::PlayerCharacter::SetRadius( Double radius )
 {
-	this->radius = radius;
-	return *this;
+    this->radius = radius;
+    return *this;
 }
+
 
 Game::PlayerCharacter& Game::PlayerCharacter::SetRotation( Double rotation )
 {
-	const Vector defualtForward = Vector( 0, 1, 0 );
-	forward = defualtForward.Rotated2D( rotation, false );
-	return *this;
+    const auto defualtForward = Vector( 0, 1, 0 );
+    forward = defualtForward.Rotated2D( rotation, false );
+    return *this;
 }
 
-const Game::Vector& Game::PlayerCharacter::GetForward( ) const
+
+const Game::Vector& Game::PlayerCharacter::GetForward() const
 {
-	return forward;
+    return forward;
 }
+
 
 Game::Vector Game::PlayerCharacter::GetFinalSpeed() const
 {
-	return speed + forward * defaultMove;
+    return speed + forward * defaultMove;
 }
 
 
 Game::PlayerCharacter& Game::PlayerCharacter::SetForward( const Vector& forward )
 {
-	this->forward = forward;
-	return *this;
+    this->forward = forward;
+    return *this;
 }
+
 
 void Game::PlayerCharacter::Update( Double deltaTime )
 {
-	location += GetFinalSpeed() * deltaTime;
+    location += GetFinalSpeed() * deltaTime;
 
-	// ¸¶Âû·Â
-	if( !speed.IsZero( ) )
-	{
-		Vector Friction = -speed.Normalized( ) * Constant::CharacterFriction * deltaTime * 2.0f;
-		if( speed.GetSqr( ) < Friction.GetSqr( ) )
-		{
-			speed = Vector::Zero();
-		}
-		else
-		{
-			speed = speed + Friction;	
-		}
-	}
+    // ¸¶Âû·Â
+    if ( !speed.IsZero() )
+    {
+        Vector Friction = -speed.Normalized() * Constant::CharacterFriction * deltaTime * 2.0f;
+        if ( speed.GetSqr() < Friction.GetSqr() )
+            speed = Vector::Zero();
+        else
+            speed = speed + Friction;
+    }
 }
 
-void Game::PlayerCharacter::OnCollide( PlayerCharacter& other )
-{
-}
 
 void Game::PlayerCharacter::TurnOnColliderFillter( const PlayerCharacter& other )
 {
-	collidFillter.insert( &other );
+    collidFillter.insert( &other );
 }
+
 
 void Game::PlayerCharacter::TurnOffColliderFillter( const PlayerCharacter& other )
 {
-	collidFillter.erase( &other );
+    collidFillter.erase( &other );
 }
+
 
 bool Game::PlayerCharacter::GetColliderFillter( const PlayerCharacter& other ) const
 {
-	return collidFillter.count( &other );
+    return collidFillter.count( &other );
 }
