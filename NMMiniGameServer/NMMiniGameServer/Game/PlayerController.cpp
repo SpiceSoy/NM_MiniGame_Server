@@ -20,8 +20,26 @@
 #include "Define/MapData.h"
 #include "Network/Session.h"
 
-using namespace std::literals::chrono_literals;
 
+static const char* to_string( Game::EPlayerState e )
+{
+	using namespace Game;
+	switch( e )
+	{
+	case EPlayerState::Spawn: return "Spawn";
+	case EPlayerState::Idle: return "Idle";
+	case EPlayerState::Run: return "Run";
+	case EPlayerState::Rush: return "Rush";
+	case EPlayerState::Rotate: return "Rotate";
+	case EPlayerState::Hit: return "Hit";
+	case EPlayerState::Win: return "Win";
+	case EPlayerState::Lose: return "Lose";
+	case EPlayerState::Die: return "Die";
+	case EPlayerState::RotateLeft: return "RotateLeft";
+	case EPlayerState::RotateRight: return "RotateRight";
+	default: return "unknown";
+	}
+}
 
 Game::PlayerController::PlayerController( )
 {
@@ -50,7 +68,7 @@ void Game::PlayerController::SetPlayerIndex( Int32 playerIndex )
 
 void Game::PlayerController::Initialize( )
 {
-	fsm.Start( EState::Spawn );
+	fsm.Start( EPlayerState::Spawn );
 	timerRushUse.SetNow( );
 	timerRushGen.SetNow( );
 	for( int i = 0; i < Constant::MaxRushCount; ++i ) rushQueue.emplace_back( Timer::Now( ) );
@@ -70,14 +88,14 @@ void Game::PlayerController::Update( Double deltaTime )
 	// 러시 개수 체크
 	if( rushCount < Constant::MaxRushCount )
 	{
-		auto it = std::next(rushQueue.begin(), rushCount );
-		if(it->IsOverNow())
+		auto it = std::next( rushQueue.begin( ), rushCount );
+		if( it->IsOverNow( ) )
 		{
 			rushCount++;
-			SendRushCountChangedPacket();
+			SendRushCountChangedPacket( );
 		}
 	}
-		
+
 }
 
 void Game::PlayerController::OnReceivedPacket( const Packet::Header* ptr )
@@ -91,12 +109,12 @@ void Game::PlayerController::OnReceivedPacket( const Packet::Header* ptr )
 	}
 }
 
-Game::PlayerController::EState Game::PlayerController::GetState( ) const
+Game::EPlayerState Game::PlayerController::GetState( ) const
 {
 	return fsm.GetState( );
 }
 
-void Game::PlayerController::ChangeState( EState state )
+void Game::PlayerController::ChangeState( EPlayerState state )
 {
 	fsm.ChangeState( state );
 }
@@ -117,10 +135,8 @@ bool Game::PlayerController::CanRush( )
 	bool hasRushCount = rushQueue.front( ).IsOverNow( );
 	if( hasRushCount && canRecast )
 	{
-		std::cout << "rush" << std::endl;
 		return true;
 	}
-	std::cout << "can't rush cool" << std::endl;
 	return false;
 }
 
@@ -131,11 +147,24 @@ void Game::PlayerController::SendStateChangedPacket( ) const
 
 void Game::PlayerController::SendRushCountChangedPacket( ) const
 {
-	std::cout << "Rush Changed" << std::endl;
+	LogLine( "Rush Changed" );
 	Packet::Server::PlayerRushCountChanged packet;
-	//UInt32 count = std::count_if( rushQueue.begin( ), rushQueue.end( ), [] ( Timer timer ) {return timer.IsOverNow( ); } );
 	packet.count = rushCount;
 	SendPacket( &packet );
+}
+
+void Game::PlayerController::LogLine( const char* format, ... ) const
+{
+	time_t c;
+	time( &c );
+	tm t;
+	localtime_s( &t, &c );
+	printf( "[%02d:%02d:%02d] P%d[%s] : ", t.tm_hour, t.tm_min, t.tm_sec, playerIndex, to_string( fsm.GetState( ) ) );
+	va_list va;
+	va_start( va, format );
+	vprintf_s( format, va );
+	va_end( va );
+	printf( "\n" );
 }
 
 void Game::PlayerController::BroadcastObjectLocation( bool isSetHeight ) const
@@ -157,7 +186,7 @@ void Game::PlayerController::BroadcastObjectLocation( bool isSetHeight ) const
 	room->BroadcastPacket( &packet );
 }
 
-void Game::PlayerController::SendStateChangedPacket( EState state ) const
+void Game::PlayerController::SendStateChangedPacket( EPlayerState state ) const
 {
 	Packet::Server::ObjectStateChanged  packet;
 	packet.targetIndex = this->playerIndex;
@@ -167,165 +196,166 @@ void Game::PlayerController::SendStateChangedPacket( EState state ) const
 
 void Game::PlayerController::AddStateFunctions( )
 {
-	auto defaultEnter = [this] ( EState prevState ) -> StateFuncResult<EState>
+	auto defaultEnter = [this] ( EPlayerState prevState ) -> StateFuncResult<EPlayerState>
 	{
 		this->SendStateChangedPacket( );
-		return StateFuncResult<EState>::NoChange( );
+		return StateFuncResult<EPlayerState>::NoChange( );
 	};
 
-	auto defaultUpdate = [] ( Double deltaTime ) -> StateFuncResult<EState> { return StateFuncResult<EState>::NoChange( ); };
-	auto defaultOnInput = [] ( const Packet::Client::Input& input ) ->StateFuncResult<EState> { return StateFuncResult<EState>::NoChange( ); };
-	auto defaultExit = [] ( EState nextState )->void {};
+	auto defaultUpdate = [] ( Double deltaTime ) -> StateFuncResult<EPlayerState> { return StateFuncResult<EPlayerState>::NoChange( ); };
+	auto defaultOnInput = [] ( const Packet::Client::Input& input ) ->StateFuncResult<EPlayerState> { return StateFuncResult<EPlayerState>::NoChange( ); };
+	auto defaultExit = [] ( EPlayerState nextState )->void {};
 
 #pragma region Spawn
-	fsm.AddStateFunctionOnEnter( EState::Spawn,
-		[this] ( EState prevState ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnEnter( EPlayerState::Spawn,
+		[this] ( EPlayerState prevState ) -> StateFuncResult<EPlayerState>
 		{
-			std::cout << "Enter Spawn" << std::endl;
+			LogLine( "Entered" );
 			this->SendStateChangedPacket( );
 			this->character->SetMoveSpeed( 0 );
-			TimeSecond waitTime = prevState == EState::Die ? Constant::RespawnSeconds : Constant::FirstSpawnWaitSeconds;
+			TimeSecond waitTime = prevState == EPlayerState::Die ? Constant::RespawnSeconds : Constant::FirstSpawnWaitSeconds;
 			this->timerSpawnStart.SetNow( ).Add( waitTime );
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnUpdate( EState::Spawn,
-		[this] ( Double deltaTime ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnUpdate( EPlayerState::Spawn,
+		[this] ( Double deltaTime ) -> StateFuncResult<EPlayerState>
 		{
 			if( this->timerSpawnStart.IsOverNow( ) )
 			{
-				std::cout << "Change idle" << std::endl;
-				return StateFuncResult<EState>( EState::Idle );
+				return StateFuncResult<EPlayerState>( EPlayerState::Idle );
 			}
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnReceiveInput( EState::Spawn, defaultOnInput );
-	fsm.AddStateFunctionOnExit( EState::Spawn, defaultExit );
+	fsm.AddStateFunctionOnReceiveInput( EPlayerState::Spawn, defaultOnInput );
+	fsm.AddStateFunctionOnExit( EPlayerState::Spawn, defaultExit );
 #pragma endregion
 
 #pragma region Idle
-	fsm.AddStateFunctionOnEnter( EState::Idle, defaultEnter );
-	fsm.AddStateFunctionOnUpdate( EState::Idle, defaultUpdate );
-	fsm.AddStateFunctionOnReceiveInput( EState::Idle,
-		[] ( const Packet::Client::Input& input ) ->StateFuncResult<EState>
+	fsm.AddStateFunctionOnEnter( EPlayerState::Idle, defaultEnter );
+	fsm.AddStateFunctionOnUpdate( EPlayerState::Idle, defaultUpdate );
+	fsm.AddStateFunctionOnReceiveInput( EPlayerState::Idle,
+		[] ( const Packet::Client::Input& input ) ->StateFuncResult<EPlayerState>
 		{
-			if( input.left == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::RotateLeft );
-			else if( input.right == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::RotateRight );
-			else if( input.rush == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::Rush );
-			return StateFuncResult<EState>::NoChange( );
+			if( input.left == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::RotateLeft );
+			else if( input.right == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::RotateRight );
+			else if( input.rush == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::Rush );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		} );
-	fsm.AddStateFunctionOnExit( EState::Idle, defaultExit );
+	fsm.AddStateFunctionOnExit( EPlayerState::Idle, defaultExit );
 #pragma endregion
 
 #pragma region Run
-	fsm.AddStateFunctionOnEnter( EState::Run,
-		[this] ( EState prevState ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnEnter( EPlayerState::Run,
+		[this] ( EPlayerState prevState ) -> StateFuncResult<EPlayerState>
 		{
-			std::cout << "Change Run" << std::endl;
+			LogLine( "Entered" );
 			this->SendStateChangedPacket( );
 			this->character->SetMoveSpeed( Constant::CharacterDefaultSpeed );
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnUpdate( EState::Run, defaultUpdate );
-	fsm.AddStateFunctionOnReceiveInput( EState::Run,
-		[] ( const Packet::Client::Input& input ) ->StateFuncResult<EState>
+	fsm.AddStateFunctionOnUpdate( EPlayerState::Run, defaultUpdate );
+	fsm.AddStateFunctionOnReceiveInput( EPlayerState::Run,
+		[] ( const Packet::Client::Input& input ) ->StateFuncResult<EPlayerState>
 		{
-			if( input.left == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::RotateLeft );
-			else if( input.right == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::RotateRight );
-			else if( input.rush == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::Rush );
-			return StateFuncResult<EState>::NoChange( );
+			if( input.left == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::RotateLeft );
+			else if( input.right == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::RotateRight );
+			else if( input.rush == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::Rush );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		} );
-	fsm.AddStateFunctionOnExit( EState::Run, defaultExit );
+	fsm.AddStateFunctionOnExit( EPlayerState::Run, defaultExit );
 #pragma endregion
 
 #pragma region RotateLeft
-	fsm.AddStateFunctionOnEnter( EState::RotateLeft,
-		[this] ( EState prevState ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnEnter( EPlayerState::RotateLeft,
+		[this] ( EPlayerState prevState ) -> StateFuncResult<EPlayerState>
 		{
-			std::cout << "Change Rotate Left" << std::endl;
-			this->SendStateChangedPacket( EState::Rotate );
+			LogLine( "Entered" );
+			this->SendStateChangedPacket( EPlayerState::Rotate );
 			this->character->SetMoveSpeed( 0 );
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnUpdate( EState::RotateLeft,
-		[this] ( Double deltaTime ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnUpdate( EPlayerState::RotateLeft,
+		[this] ( Double deltaTime ) -> StateFuncResult<EPlayerState>
 		{
 			character->RotateLeft( Constant::CharacterRotateSpeed * deltaTime );
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnReceiveInput( EState::RotateLeft,
-		[] ( const Packet::Client::Input& input ) ->StateFuncResult<EState>
+	fsm.AddStateFunctionOnReceiveInput( EPlayerState::RotateLeft,
+		[] ( const Packet::Client::Input& input ) ->StateFuncResult<EPlayerState>
 		{
-			if( input.left == Packet::EInputState::Release ) return  StateFuncResult<EState>( EState::Run );
-			else if( input.right == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::RotateRight );
-			else if( input.rush == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::Rush );
-			return StateFuncResult<EState>::NoChange( );
+			if( input.left == Packet::EInputState::Release ) return  StateFuncResult<EPlayerState>( EPlayerState::Run );
+			else if( input.right == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::RotateRight );
+			else if( input.rush == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::Rush );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		} );
-	fsm.AddStateFunctionOnExit( EState::RotateLeft, defaultExit );
+	fsm.AddStateFunctionOnExit( EPlayerState::RotateLeft, defaultExit );
 #pragma endregion
 
 #pragma region RotateRight
-	fsm.AddStateFunctionOnEnter( EState::RotateRight,
-		[this] ( EState prevState ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnEnter( EPlayerState::RotateRight,
+		[this] ( EPlayerState prevState ) -> StateFuncResult<EPlayerState>
 		{
-			std::cout << "Change Rotate Right" << std::endl;
-			this->SendStateChangedPacket( EState::Rotate );
+			LogLine( "Entered" );
+			this->SendStateChangedPacket( EPlayerState::Rotate );
 			this->character->SetMoveSpeed( 0 );
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnUpdate( EState::RotateRight,
-		[this] ( Double deltaTime ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnUpdate( EPlayerState::RotateRight,
+		[this] ( Double deltaTime ) -> StateFuncResult<EPlayerState>
 		{
 			character->RotateRight( Constant::CharacterRotateSpeed * deltaTime );
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnReceiveInput( EState::RotateRight,
-		[] ( const Packet::Client::Input& input ) ->StateFuncResult<EState>
+	fsm.AddStateFunctionOnReceiveInput( EPlayerState::RotateRight,
+		[] ( const Packet::Client::Input& input ) ->StateFuncResult<EPlayerState>
 		{
-			if( input.left == Packet::EInputState::Click ) return  StateFuncResult<EState>( EState::RotateLeft );
-			else if( input.right == Packet::EInputState::Release ) return StateFuncResult<EState>( EState::Run );
-			else if( input.rush == Packet::EInputState::Click ) return StateFuncResult<EState>( EState::Rush );
-			return StateFuncResult<EState>::NoChange( );
+			if( input.left == Packet::EInputState::Click ) return  StateFuncResult<EPlayerState>( EPlayerState::RotateLeft );
+			else if( input.right == Packet::EInputState::Release ) return StateFuncResult<EPlayerState>( EPlayerState::Run );
+			else if( input.rush == Packet::EInputState::Click ) return StateFuncResult<EPlayerState>( EPlayerState::Rush );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		} );
-	fsm.AddStateFunctionOnExit( EState::RotateRight, defaultExit );
+	fsm.AddStateFunctionOnExit( EPlayerState::RotateRight, defaultExit );
 #pragma endregion
 
 #pragma region Rush
-	fsm.AddStateFunctionOnEnter( EState::Rush,
-		[this] ( EState prevState ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnEnter( EPlayerState::Rush,
+		[this] ( EPlayerState prevState ) -> StateFuncResult<EPlayerState>
 		{
-			std::cout << "Try Rush" << std::endl;
+			LogLine( "Rush Try" );
 			if( this->CanRush( ) )
 			{
-				this->SendStateChangedPacket( EState::Rush );
+				LogLine( "Entered" );
+				this->SendStateChangedPacket( EPlayerState::Rush );
 				this->UseRush( );
-				return StateFuncResult<EState>::NoChange( );
+				return StateFuncResult<EPlayerState>::NoChange( );
 			}
 			else
 			{
-				return StateFuncResult<EState>( prevState );
+				LogLine( "Failed" );
+				return StateFuncResult<EPlayerState>( prevState );
 			}
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnUpdate( EState::Rush,
-		[this] ( Double deltaTime ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnUpdate( EPlayerState::Rush,
+		[this] ( Double deltaTime ) -> StateFuncResult<EPlayerState>
 		{
 			if( this->character->GetSpeed( ).GetLength( ) < 20.0f )
 			{
-				return StateFuncResult<EState>( EState::Run );
+				return StateFuncResult<EPlayerState>( EPlayerState::Run );
 			}
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnReceiveInput( EState::Rush, defaultOnInput );
-	fsm.AddStateFunctionOnExit( EState::Rush, defaultExit );
+	fsm.AddStateFunctionOnReceiveInput( EPlayerState::Rush, defaultOnInput );
+	fsm.AddStateFunctionOnExit( EPlayerState::Rush, defaultExit );
 #pragma endregion
 
 #pragma region Hit
@@ -338,32 +368,32 @@ void Game::PlayerController::AddStateFunctions( )
 #pragma endregion
 
 #pragma region Die
-	fsm.AddStateFunctionOnEnter( EState::Die,
-		[this] ( EState prevState ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnEnter( EPlayerState::Die,
+		[this] ( EPlayerState prevState ) -> StateFuncResult<EPlayerState>
 		{
-			std::cout << "Enter Die" << std::endl;
+			LogLine( "Entered" );
 			timerRespawnStart.SetNow( );
 			Vector outVector = -character->GetLocation( ).Normalized( );
-			this->SendStateChangedPacket( EState::Die );
+			this->SendStateChangedPacket( EPlayerState::Die );
 			character->SetSpeed( outVector * Constant::CharacterMapOutSpeed );
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnUpdate( EState::Die,
-		[this] ( Double deltaTime ) -> StateFuncResult<EState>
+	fsm.AddStateFunctionOnUpdate( EPlayerState::Die,
+		[this] ( Double deltaTime ) -> StateFuncResult<EPlayerState>
 		{
 			if( timerRespawnStart.IsOver( Constant::RespawnSeconds ) )
 			{
 				character->SetLocation( room->GetSpawnLocation( playerIndex ) );
 				character->SetSpeed( Vector::Zero( ) );
 				BroadcastObjectLocation( true );
-				return StateFuncResult<EState>( EState::Spawn );
+				return StateFuncResult<EPlayerState>( EPlayerState::Spawn );
 			}
-			return StateFuncResult<EState>::NoChange( );
+			return StateFuncResult<EPlayerState>::NoChange( );
 		}
 	);
-	fsm.AddStateFunctionOnReceiveInput( EState::Die, defaultOnInput );
-	fsm.AddStateFunctionOnExit( EState::Die, defaultExit );
+	fsm.AddStateFunctionOnReceiveInput( EPlayerState::Die, defaultOnInput );
+	fsm.AddStateFunctionOnExit( EPlayerState::Die, defaultExit );
 #pragma endregion
 
 

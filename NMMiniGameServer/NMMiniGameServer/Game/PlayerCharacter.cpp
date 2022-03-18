@@ -14,7 +14,6 @@
 #include "Define/MapData.h"
 #include <iostream>
 
-
 Game::PlayerCharacter::PlayerCharacter( )
 	: radius( Constant::CharacterRadius ), location( 0 ), speed( 0 ), forward( 0, 1, 0 ), defaultMove( 0 )
 {

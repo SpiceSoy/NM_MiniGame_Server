@@ -22,23 +22,24 @@ namespace Network
 
 namespace Game
 {
+	enum class ERoomState
+	{
+		Opened,
+		Waited,
+		Doing,
+		End,
+		Closed
+	};
+
 	class Room
 	{
-		enum class EState
-		{
-			Opend,
-			Waited,
-			Doing,
-			End,
-			Closed
-		};
 	private:
 		Int32 currentUserCount = 0;
 		const Int32 maxUserCount = 0;
 		std::vector<PlayerController> players;
 		std::vector<PlayerCharacter> characters;
 		Timer startTime;
-		EState state;
+		ERoomState state;
 	public:
 		Room(Int32 userCount);
 		~Room();
@@ -58,8 +59,8 @@ namespace Game
 		void CheckCollisionTwoPlayer(Game::PlayerCharacter& firstChr, Game::PlayerCharacter& secondChr);
 		Vector GetSpawnLocation(UInt32 index) const;
 		Vector GetSpawnForward( UInt32 index ) const;
-		EState GetState() const;
-		void SetState(EState state);
+		ERoomState GetState() const;
+		void SetState( ERoomState state);
 	private:
 		void CheckCollision( Double deltaTime);
 
@@ -68,7 +69,7 @@ namespace Game
 		void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser );
 		void BroadcastStartGame();
 		void BroadcastEndGame();
-
+		void LogLine( const char* format, ... ) const;
 	};
 
 	// 템플릿 함수들

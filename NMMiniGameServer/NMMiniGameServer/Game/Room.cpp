@@ -10,13 +10,30 @@
 
 
 #include "Game/Room.h"
+
+#include <cstdarg>
+
 #include "Define/PacketDefine.h"
 #include "Define/MapData.h"
 #include <iostream>
 
 
+static const char* to_string( Game::ERoomState e )
+{
+	using namespace Game;
+	switch( e )
+	{
+	case ERoomState::Opened: return "Opened";
+	case ERoomState::Waited: return "Waited";
+	case ERoomState::Doing: return "Doing";
+	case ERoomState::End: return "End";
+	case ERoomState::Closed: return "Closed";
+	default: return "unknown";
+	}
+}
+
 Game::Room::Room( Int32 userCount )
-	: maxUserCount( userCount ), state( EState::Opend )
+	: maxUserCount( userCount ), state( ERoomState::Opened )
 {
 	players.resize( userCount );
 	characters.resize( userCount );
@@ -56,16 +73,17 @@ void Game::Room::Update( Double deltaTime )
 		controller.BroadcastObjectLocation( false );
 	}
 	// 시작했는가?
-	if( state == EState::Waited && startTime.IsOverNow( ) )
+	if( state == ERoomState::Waited && startTime.IsOverNow( ) )
 	{
-		SetState( EState::Doing );
+		SetState( ERoomState::Doing );
+		LogLine( "Start of Game" );
 		BroadcastStartGame( );
 	}
 	// 끝났는가?
-	if( state == EState::Doing && startTime.IsOver( Constant::GameLengthSeconds ) )
+	if( state == ERoomState::Doing && startTime.IsOver( Constant::GameLengthSeconds ) )
 	{
-		std::cout << "End of Game" << std::endl;
-		SetState( EState::End );
+		SetState( ERoomState::End );
+		LogLine("End of Game" );
 		BroadcastEndGame( );
 	}
 }
@@ -84,7 +102,8 @@ void Game::Room::ReadyToGame( )
 		players[i].BroadcastObjectLocation( true );
 		players[i].Initialize( );
 	}
-	SetState( EState::Waited );
+	SetState( ERoomState::Waited );
+	LogLine( "Ready of Game" );
 	startTime.SetNow( ).Add( Constant::FirstSpawnWaitSeconds );
 
 }
@@ -114,12 +133,12 @@ void Game::Room::CheckCollisionTwoPlayer( Game::PlayerCharacter& firstChr, Game:
 		normal.Normalize( );
 		Vector firstForward = firstChr.GetForward( );
 		Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized( );
-		Vector firstFinalSpeed = firstChr.GetFinalSpeed();
+		Vector firstFinalSpeed = firstChr.GetFinalSpeed( );
 		Vector secondForward = secondChr.GetForward( );
 		Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized( );
 		Vector secondFinalSpeed = firstChr.GetFinalSpeed( );
 
-		firstChr.SetSpeed( firstReflected * secondFinalSpeed.GetLength() * Constant::CollideForceRatio );
+		firstChr.SetSpeed( firstReflected * secondFinalSpeed.GetLength( ) * Constant::CollideForceRatio );
 		secondChr.SetSpeed( secondReflected * firstFinalSpeed.GetLength( ) * Constant::CollideForceRatio );
 
 		while( IsCollide( firstChr, secondChr ) )
@@ -150,9 +169,9 @@ void Game::Room::CheckCollision( Double deltaTime )
 			CheckCollisionTwoPlayer( firstChr, secondChr );
 		}
 		bool isOutOfMap = firstChr.GetLocation( ).GetLength( ) > Constant::MapSize;
-		if( isOutOfMap && firstCon.GetState( ) != PlayerController::EState::Die )
+		if( isOutOfMap && firstCon.GetState( ) != EPlayerState::Die )
 		{
-			firstCon.ChangeState( PlayerController::EState::Die );
+			firstCon.ChangeState( EPlayerState::Die );
 		}
 	}
 }
@@ -186,6 +205,20 @@ void Game::Room::BroadcastEndGame( )
 	BroadcastPacket( &packet );
 }
 
+void Game::Room::LogLine( const char* format, ... ) const
+{
+	time_t c;
+	time( &c );
+	tm t;
+	localtime_s( &t, &c );
+	printf( "[%02d:%02d:%02d] ROOM[%s] : ", t.tm_hour, t.tm_min, t.tm_sec, to_string( GetState( ) ) );
+	va_list va;
+	va_start( va, format );
+	vprintf_s( format, va );
+	va_end( va );
+	printf( "\n" );
+}
+
 Game::Vector Game::Room::GetSpawnLocation( UInt32 index ) const
 {
 	Double angle = 360.0 * ( static_cast<Double>( index + 1 ) / static_cast<Double>( maxUserCount ) );
@@ -201,12 +234,12 @@ Game::Vector Game::Room::GetSpawnForward( UInt32 index ) const
 	return ( end - start ).Normalized( );
 }
 
-Game::Room::EState Game::Room::GetState( ) const
+Game::ERoomState Game::Room::GetState( ) const
 {
 	return state;
 }
 
-void Game::Room::SetState( EState state )
+void Game::Room::SetState( ERoomState state )
 {
 	this->state = state;
 }

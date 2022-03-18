@@ -32,33 +32,25 @@ namespace Packet
 
 namespace Game
 {
+	enum class EPlayerState : Byte
+	{
+		Spawn = 0,
+		Idle = 1,
+		Run = 2,
+		Rush = 3,
+		Rotate = 4,
+		Hit = 5,
+		Win = 6,
+		Lose = 7,
+		Die = 8,
+		// not used in client
+		RotateLeft = 9,
+		RotateRight = 10,
+	};
+
 	class PlayerController
 	{
 	public:
-		enum class EMoveState
-		{
-			None,
-			MoveForward,
-			Rush,
-			RotateLeft,
-			RotateRight,
-		};
-
-		enum class EState : Byte
-		{
-			Spawn = 0,
-			Idle = 1,
-			Run = 2,
-			Rush = 3,
-			Rotate = 4,
-			Hit = 5,
-			Win = 6,
-			Lose = 7,
-			Die = 8,
-			// not used in client
-			RotateLeft = 9,
-			RotateRight = 10,
-		};
 
 	private:
 		class PlayerCharacter* character = nullptr;
@@ -72,8 +64,7 @@ namespace Game
 		Timer timerRespawnStart;
 		std::list<Timer> rushQueue;
 		Int32 rushCount = 0;
-		EMoveState moveState = EMoveState::None;
-		LambdaFSM<EState> fsm;
+		LambdaFSM<EPlayerState> fsm;
 	public:
 		PlayerController( );
 		~PlayerController( ) = default;
@@ -89,16 +80,17 @@ namespace Game
 
 		void Update( Double deltaTime );
 		void OnReceivedPacket( const Packet::Header* ptr );
-		EState GetState( ) const;
-		void ChangeState( EState state );
-		void BroadcastObjectLocation(bool isSetHeight) const;
+		EPlayerState GetState( ) const;
+		void ChangeState( EPlayerState state );
+		void BroadcastObjectLocation( bool isSetHeight ) const;
 	private:
 		bool CanRush( );
 		void UseRush( );
 		void AddStateFunctions( );
-		void SendStateChangedPacket( EState state ) const;
+		void SendStateChangedPacket( EPlayerState state ) const;
 		void SendStateChangedPacket( ) const;
-		void SendRushCountChangedPacket() const;
+		void SendRushCountChangedPacket( ) const;
+		void LogLine(const char* format, ...) const;
 	};
 
 	template <class PacketType>
