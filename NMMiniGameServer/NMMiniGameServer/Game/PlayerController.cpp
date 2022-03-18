@@ -344,6 +344,7 @@ void Game::PlayerController::AddStateFunctions( )
 			std::cout << "Enter Die" << std::endl;
 			timerRespawnStart.SetNow( );
 			Vector outVector = -character->GetLocation( ).Normalized( );
+			this->SendStateChangedPacket( EState::Die );
 			character->SetSpeed( outVector * Constant::CharacterMapOutSpeed );
 			return StateFuncResult<EState>::NoChange( );
 		}
