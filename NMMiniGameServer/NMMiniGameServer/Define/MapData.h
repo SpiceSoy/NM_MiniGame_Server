@@ -11,7 +11,10 @@
 
 #pragma once
 #include "Define/DataTypes.h"
+#include <chrono>
 
+using namespace std::chrono_literals;
+using TimeSecond = std::chrono::duration<double>;
 
 namespace Constant
 {
@@ -36,7 +39,10 @@ namespace Constant
 
 	// Game
 	constexpr Int32 MaxRushCount = 3;
-	constexpr Double RushRegenSeconds = 5.0;
+	constexpr TimeSecond RushRegenSeconds = 5.0s;
+	constexpr TimeSecond RespawnSeconds = 1.5s;
+	constexpr TimeSecond FirstSpawnWaitSeconds = 1.5s;
+	constexpr TimeSecond GameLengthSeconds = 60s;
 
 
 };

@@ -87,18 +87,20 @@ void Game::PlayerController::ChangeState( EState state )
 
 void Game::PlayerController::UseRush( )
 {
-	if( ( timerRushUse.IsOver( 1s ) ) )
-	{
-		timerRushUse.SetNow( );
-		character->AddSpeed( character->GetForward( ) * Constant::CharacterRushSpeed );
-		std::cout << "rush" << std::endl;
-	}
-	std::cout << "can't rush cool" << std::endl;
+	timerRushUse.SetNow( );
+	character->AddSpeed( character->GetForward( ) * Constant::CharacterRushSpeed );
+	std::cout << "rush" << std::endl;
 }
 
 bool Game::PlayerController::CanRush( )
 {
-	return rushStack > 0 || timerRushGen.IsOverNow( );
+	if( ( rushStack > 0 || timerRushGen.IsOverNow( ) ) && ( timerRushUse.IsOver( 1s ) ) )
+	{
+		std::cout << "rush" << std::endl;
+		return true;
+	}
+	std::cout << "can't rush cool" << std::endl;
+	return false;
 }
 
 void Game::PlayerController::SendStateChangedPacket( ) const
@@ -106,11 +108,11 @@ void Game::PlayerController::SendStateChangedPacket( ) const
 	SendStateChangedPacket( this->GetState( ) );
 }
 
-void Game::PlayerController::BroadcastObjectLocation(bool isSetHeight) const
+void Game::PlayerController::BroadcastObjectLocation( bool isSetHeight ) const
 {
 	Packet::Server::ObjectLocation packet;
 	packet.targetIndex = playerIndex;
-	packet.chracterState = static_cast<Int32>(GetState());
+	packet.chracterState = static_cast<Int32>( GetState( ) );
 	packet.isSetHeight = isSetHeight;
 	Vector location = character->GetLocation( );
 	packet.locationX = location.x;
@@ -151,15 +153,16 @@ void Game::PlayerController::AddStateFunctions( )
 		{
 			std::cout << "Enter Spawn" << std::endl;
 			this->SendStateChangedPacket( );
-			this->character->SetMoveSpeed(0);
-			this->timerSpawnStart.SetNow( );
+			this->character->SetMoveSpeed( 0 );
+			TimeSecond waitTime = prevState == EState::Die ? Constant::RespawnSeconds : Constant::FirstSpawnWaitSeconds;
+			this->timerSpawnStart.SetNow( ).Add( waitTime );
 			return StateFuncResult<EState>::NoChange( );
 		}
 	);
 	fsm.AddStateFunctionOnUpdate( EState::Spawn,
 		[this] ( Double deltaTime ) -> StateFuncResult<EState>
 		{
-			if( this->timerSpawnStart.IsOver( 3s ) )
+			if( this->timerSpawnStart.IsOverNow( ) )
 			{
 				std::cout << "Change idle" << std::endl;
 				return StateFuncResult<EState>( EState::Idle );
@@ -317,11 +320,11 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnUpdate( EState::Die,
 		[this] ( Double deltaTime ) -> StateFuncResult<EState>
 		{
-			if( timerRespawnStart.IsOver( 1.5s ) )
+			if( timerRespawnStart.IsOver( Constant::RespawnSeconds ) )
 			{
 				character->SetLocation( room->GetSpawnLocation( playerIndex ) );
-				character->SetSpeed( Vector::Zero() );
-				BroadcastObjectLocation(true);
+				character->SetSpeed( Vector::Zero( ) );
+				BroadcastObjectLocation( true );
 				return StateFuncResult<EState>( EState::Spawn );
 			}
 			return StateFuncResult<EState>::NoChange( );
