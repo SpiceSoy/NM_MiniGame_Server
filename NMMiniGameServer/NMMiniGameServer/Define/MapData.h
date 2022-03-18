@@ -20,7 +20,7 @@ namespace Constant
 {
 	// Server
 	constexpr UInt32 TickTerm = 1000 / 60;
-	constexpr UInt32 MaxUserCount = 3;
+	constexpr UInt32 MaxUserCount = 1;
 	// Map
 	constexpr Double MapSize = 1300;
 	constexpr Double SpawnPointRatio = 0.75;

@@ -28,6 +28,9 @@ namespace Packet
 		ServerObjectStateChanged,
 		ServerChangeMatchingInfo,
 		ServerEndOfMatching,
+		ServerEndGame,
+		ServerRushUsed,
+		ServerStartGame,
 		ClientTypeStart = 0x80,
 		ClientRequestFindMatch,
 		ClientRequestCancelMatch,
@@ -85,17 +88,17 @@ namespace Packet
 
 		struct StartGame
 		{
-			Header header = SERVER_HEADER( ObjectStateChanged );
+			Header header = SERVER_HEADER( StartGame );
 		};
 		struct EndGame
 		{
-			Header header = SERVER_HEADER( ObjectStateChanged );
+			Header header = SERVER_HEADER( EndGame );
 			Int32 scores[6];
 		};
 
 		struct RushUsed
 		{
-			Header header = SERVER_HEADER( ObjectStateChanged );
+			Header header = SERVER_HEADER( RushUsed );
 			Int32 currentRushStack;
 		};
 
