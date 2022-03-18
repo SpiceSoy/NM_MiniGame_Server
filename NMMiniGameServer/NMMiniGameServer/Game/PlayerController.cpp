@@ -159,7 +159,7 @@ void Game::PlayerController::LogLine( const char* format, ... ) const
 	time( &c );
 	tm t;
 	localtime_s( &t, &c );
-	printf( "[%02d:%02d:%02d] P%d[%s] : ", t.tm_hour, t.tm_min, t.tm_sec, playerIndex, to_string( fsm.GetState( ) ) );
+	printf( "[%02d:%02d:%02d] P%d[%02d:%s] : ", t.tm_hour, t.tm_min, t.tm_sec, playerIndex, static_cast<Int32>(fsm.GetState( )), to_string( fsm.GetState( ) ) );
 	va_list va;
 	va_start( va, format );
 	vprintf_s( format, va );
