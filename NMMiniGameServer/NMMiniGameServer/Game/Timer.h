@@ -28,7 +28,7 @@ namespace Game
 
 		Timer& SetNow()
 		{
-			point = Now();
+			point = SystemClock::now( );
 			return *this;
 		}
 		template<typename DurationType>
@@ -42,17 +42,19 @@ namespace Game
 		bool IsOver( const DurationType& duration )
 		{
 			auto newTime = point + duration;
-			return newTime < Now( );
+			return newTime < Now( ).point;
 		}
 
 		bool IsOverNow()
 		{
-			return point < Now( );
+			return point < Now( ).point;
 		}
 
-		static TimePoint Now( )
+		static Timer Now( )
 		{
-			return SystemClock::now( );
+			Timer inst;
+			inst.SetNow();
+			return inst;
 		}
 
 	};

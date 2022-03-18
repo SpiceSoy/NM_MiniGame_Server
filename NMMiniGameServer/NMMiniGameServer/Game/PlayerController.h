@@ -14,8 +14,7 @@
 #include "Game/Vector.h"
 #include "Game/LambdaFSM.h"
 #include "Game/Timer.h"
-#include <chrono>
-
+#include <list>
 
 namespace Network
 {
@@ -71,9 +70,9 @@ namespace Game
 		Timer timerRushGen;
 		Timer timerSpawnStart;
 		Timer timerRespawnStart;
-
+		std::list<Timer> rushQueue;
+		Int32 rushCount = 0;
 		EMoveState moveState = EMoveState::None;
-		Int32 rushStack = 3;
 		LambdaFSM<EState> fsm;
 	public:
 		PlayerController( );
@@ -85,8 +84,8 @@ namespace Game
 		void Initialize( );
 
 		template <class PacketType>
-		void SendPacket( const PacketType* buffer );
-		void SendByte( const Byte* data, UInt64 size );
+		void SendPacket( const PacketType* buffer ) const;
+		void SendByte( const Byte* data, UInt64 size ) const;
 
 		void Update( Double deltaTime );
 		void OnReceivedPacket( const Packet::Header* ptr );
@@ -99,10 +98,11 @@ namespace Game
 		void AddStateFunctions( );
 		void SendStateChangedPacket( EState state ) const;
 		void SendStateChangedPacket( ) const;
+		void SendRushCountChangedPacket() const;
 	};
 
 	template <class PacketType>
-	void Game::PlayerController::SendPacket( const PacketType* buffer )
+	void Game::PlayerController::SendPacket( const PacketType* buffer ) const
 	{
 		SendByte( reinterpret_cast<const Byte*>( buffer ), sizeof( PacketType ) );
 	}

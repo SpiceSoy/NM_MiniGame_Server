@@ -89,6 +89,7 @@ namespace Packet
 		struct StartGame
 		{
 			Header header = SERVER_HEADER( StartGame );
+			Int32 GameTime;
 		};
 		struct EndGame
 		{

@@ -64,8 +64,9 @@ void Game::Room::Update( Double deltaTime )
 	// ³¡³µ´Â°¡?
 	if( state == EState::Doing && startTime.IsOver( Constant::GameLengthSeconds ) )
 	{
+		std::cout << "End of Game" << std::endl;
 		SetState( EState::End );
-		BroadcastEndGame();
+		BroadcastEndGame( );
 	}
 }
 
@@ -85,7 +86,7 @@ void Game::Room::ReadyToGame( )
 	}
 	SetState( EState::Waited );
 	startTime.SetNow( ).Add( Constant::FirstSpawnWaitSeconds );
-	
+
 }
 
 void Game::Room::BroadcastByte( const Byte* data, UInt32 size )
@@ -113,11 +114,13 @@ void Game::Room::CheckCollisionTwoPlayer( Game::PlayerCharacter& firstChr, Game:
 		normal.Normalize( );
 		Vector firstForward = firstChr.GetForward( );
 		Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized( );
+		Vector firstFinalSpeed = firstChr.GetFinalSpeed();
 		Vector secondForward = secondChr.GetForward( );
 		Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized( );
+		Vector secondFinalSpeed = firstChr.GetFinalSpeed( );
 
-		firstChr.SetSpeed( firstReflected * Constant::CharacterDefaultSpeed * 5 );
-		secondChr.SetSpeed( secondReflected * Constant::CharacterDefaultSpeed * 5 );
+		firstChr.SetSpeed( firstReflected * secondFinalSpeed.GetLength() * Constant::CollideForceRatio );
+		secondChr.SetSpeed( secondReflected * firstFinalSpeed.GetLength( ) * Constant::CollideForceRatio );
 
 		while( IsCollide( firstChr, secondChr ) )
 		{
@@ -173,6 +176,7 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 void Game::Room::BroadcastStartGame( )
 {
 	Packet::Server::StartGame packet;
+	packet.GameTime = std::chrono::duration_cast<std::chrono::seconds>( Constant::GameLengthSeconds ).count( );
 	BroadcastPacket( &packet );
 }
 

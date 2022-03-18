@@ -10,6 +10,9 @@
 
 
 #include "Game/PlayerController.h"
+
+#include <algorithm>
+
 #include "Game/PlayerCharacter.h"
 #include "Game/Room.h"
 #include "Define/DataTypes.h"
@@ -50,9 +53,10 @@ void Game::PlayerController::Initialize( )
 	fsm.Start( EState::Spawn );
 	timerRushUse.SetNow( );
 	timerRushGen.SetNow( );
+	for( int i = 0; i < Constant::MaxRushCount; ++i ) rushQueue.emplace_back( Timer::Now( ) );
 }
 
-void Game::PlayerController::SendByte( const Byte* data, UInt64 size )
+void Game::PlayerController::SendByte( const Byte* data, UInt64 size ) const
 {
 	if( !session ) return;
 	session->SendByte( data, size );
@@ -62,6 +66,18 @@ void Game::PlayerController::Update( Double deltaTime )
 {
 	if( !character ) return;
 	fsm.Update( deltaTime );
+
+	// 러시 개수 체크
+	if( rushCount < Constant::MaxRushCount )
+	{
+		auto it = std::next(rushQueue.begin(), rushCount );
+		if(it->IsOverNow())
+		{
+			rushCount++;
+			SendRushCountChangedPacket();
+		}
+	}
+		
 }
 
 void Game::PlayerController::OnReceivedPacket( const Packet::Header* ptr )
@@ -87,14 +103,19 @@ void Game::PlayerController::ChangeState( EState state )
 
 void Game::PlayerController::UseRush( )
 {
-	timerRushUse.SetNow( );
+	timerRushUse.SetNow( ).Add( Constant::RushRecastTime );
+	rushQueue.pop_front( );
+	rushQueue.emplace_back( Timer::Now( ).Add( Constant::RushRegenSeconds ) );
 	character->AddSpeed( character->GetForward( ) * Constant::CharacterRushSpeed );
-	std::cout << "rush" << std::endl;
+	rushCount -= 1;
+	SendRushCountChangedPacket( );
 }
 
 bool Game::PlayerController::CanRush( )
 {
-	if( ( rushStack > 0 || timerRushGen.IsOverNow( ) ) && ( timerRushUse.IsOver( 1s ) ) )
+	bool canRecast = timerRushUse.IsOverNow( );
+	bool hasRushCount = rushQueue.front( ).IsOverNow( );
+	if( hasRushCount && canRecast )
 	{
 		std::cout << "rush" << std::endl;
 		return true;
@@ -106,6 +127,15 @@ bool Game::PlayerController::CanRush( )
 void Game::PlayerController::SendStateChangedPacket( ) const
 {
 	SendStateChangedPacket( this->GetState( ) );
+}
+
+void Game::PlayerController::SendRushCountChangedPacket( ) const
+{
+	std::cout << "Rush Changed" << std::endl;
+	Packet::Server::PlayerRushCountChanged packet;
+	//UInt32 count = std::count_if( rushQueue.begin( ), rushQueue.end( ), [] ( Timer timer ) {return timer.IsOverNow( ); } );
+	packet.count = rushCount;
+	SendPacket( &packet );
 }
 
 void Game::PlayerController::BroadcastObjectLocation( bool isSetHeight ) const
@@ -270,6 +300,7 @@ void Game::PlayerController::AddStateFunctions( )
 	fsm.AddStateFunctionOnEnter( EState::Rush,
 		[this] ( EState prevState ) -> StateFuncResult<EState>
 		{
+			std::cout << "Try Rush" << std::endl;
 			if( this->CanRush( ) )
 			{
 				this->SendStateChangedPacket( EState::Rush );

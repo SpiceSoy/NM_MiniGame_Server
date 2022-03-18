@@ -48,6 +48,7 @@ namespace Game
 		PlayerCharacter& SetRotation( Double rotation );
 
 		const Vector& GetForward() const;
+		Vector GetFinalSpeed() const;
 		PlayerCharacter& SetForward( const Vector& forward );
 		void Update( Double deltaTime );
 		void OnCollide(PlayerCharacter& other);

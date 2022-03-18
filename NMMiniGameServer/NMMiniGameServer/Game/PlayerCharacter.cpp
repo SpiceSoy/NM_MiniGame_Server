@@ -93,6 +93,11 @@ const Game::Vector& Game::PlayerCharacter::GetForward( ) const
 	return forward;
 }
 
+Game::Vector Game::PlayerCharacter::GetFinalSpeed() const
+{
+	return speed + forward * defaultMove;
+}
+
 
 Game::PlayerCharacter& Game::PlayerCharacter::SetForward( const Vector& forward )
 {
@@ -102,7 +107,7 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetForward( const Vector& forward 
 
 void Game::PlayerCharacter::Update( Double deltaTime )
 {
-	location += ( speed + forward * defaultMove ) * deltaTime;
+	location += GetFinalSpeed() * deltaTime;
 
 	// ¸¶Âû·Â
 	if( !speed.IsZero( ) )
