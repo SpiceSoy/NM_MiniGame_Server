@@ -53,7 +53,7 @@ void Game::Room::Update( Double deltaTime )
 		PlayerCharacter& character = characters[i];
 		PlayerController& controller = players[i];
 		character.Update( deltaTime );
-		controller.BroadcastObjectLocation(false);
+		controller.BroadcastObjectLocation( false );
 	}
 }
 
@@ -65,7 +65,10 @@ void Game::Room::ReadyToGame( )
 	{
 		packet.playerIndex = i; // юс╫ц
 		players[i].SendPacket( &packet );
-		players[i].BroadcastObjectLocation(true);
+	}
+	for( Int32 i = 0; i < maxUserCount; i++ )
+	{
+		players[i].BroadcastObjectLocation( true );
 		players[i].Initialize( );
 	}
 }
@@ -129,7 +132,7 @@ void Game::Room::CheckCollision( Double deltaTime )
 			CheckCollisionTwoPlayer( firstChr, secondChr );
 		}
 		bool isOutOfMap = firstChr.GetLocation( ).GetLength( ) > Constant::MapSize;
-		if( isOutOfMap && firstCon.GetState() != PlayerController::EState::Die )
+		if( isOutOfMap && firstCon.GetState( ) != PlayerController::EState::Die )
 		{
 			firstCon.ChangeState( PlayerController::EState::Die );
 		}
@@ -154,7 +157,7 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 
 Game::Vector Game::Room::GetSpawnLocation( UInt32 index ) const
 {
-	Double angle = 360.0 * ( static_cast<Double>(index + 1) / static_cast<Double>(maxUserCount) );
+	Double angle = 360.0 * ( static_cast<Double>( index + 1 ) / static_cast<Double>( maxUserCount ) );
 	Double spawnLength = Constant::SpawnPointRatio * Constant::MapSize;
 	Vector spawnPoint = Vector( 0.0, -spawnLength, 0.0 ).Rotated2D( angle );
 	return spawnPoint;
