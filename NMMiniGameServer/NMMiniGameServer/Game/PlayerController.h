@@ -11,6 +11,7 @@
 
 #pragma once
 #include "Define/DataTypes.h"
+#include "Define/MapData.h"
 #include "Game/Vector.h"
 #include "Game/LambdaFSM.h"
 #include "Game/Timer.h"
@@ -60,15 +61,22 @@ namespace Game
         class PlayerCharacter* character = nullptr;
         Network::Session* session = nullptr;
         class Room* room = nullptr;
-        Int32 playerIndex = 0;
 
+        LambdaFSM< EPlayerState > fsm;
+        Int32 playerIndex = 0;
+    public:
+        Int32 GetPlayerIndex() const;
+    private:
+        std::list< Timer > rushQueue;
         Timer timerRushUse;
         Timer timerRushGen;
+        Int32 rushCount = 0;
+
         Timer timerSpawnStart;
         Timer timerRespawnStart;
-        std::list< Timer > rushQueue;
-        Int32 rushCount = 0;
-        LambdaFSM< EPlayerState > fsm;
+
+        Timer timerLastCollided;
+        Int32 lastCollidedPlayerIndex = Constant::NullPlayerIndex;
     public:
         PlayerController();
         ~PlayerController() = default;
@@ -87,6 +95,8 @@ namespace Game
         EPlayerState GetState() const;
         void ChangeState( EPlayerState state );
         void BroadcastObjectLocation( bool isSetHeight ) const;
+        void OnCollided( const PlayerController& other );
+        Int32 GetLastCollidedPlayerIndex() const;
     private:
         bool CanRush();
         void UseRush();

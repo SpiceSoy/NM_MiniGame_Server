@@ -40,13 +40,15 @@ namespace Network
         SocketHandle listenSocketHandle = 0;
         std::list< Game::Room > rooms;
         std::list< Session > sessions;
-        std::queue< RequestMatch > matchQueue;
+        std::list< RequestMatch > matchQueue;
+        bool turnOnMatch = false;
     public:
         Server();
         ~Server();
         Void Initialize( UInt16 Port );
         Void Process();
         void AddRequest( const RequestMatch& req );
+        void CancelRequest( Session* requester );
     private:
         void InitializeSocket();
         void CreateListenSocket();

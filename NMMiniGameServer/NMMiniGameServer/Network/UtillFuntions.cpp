@@ -19,8 +19,14 @@
 Char* Network::GetErrorMessageString( Int32 err )
 {
     Char* msgBuffer = nullptr;
-    FormatMessageA( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, err,
-                    MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ), ( LPSTR )&msgBuffer, 0, nullptr );
+    FormatMessageA( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                   nullptr,
+                   err,
+                   MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
+                   ( LPSTR )&msgBuffer,
+                   0,
+                   nullptr
+                  );
     return msgBuffer;
 }
 

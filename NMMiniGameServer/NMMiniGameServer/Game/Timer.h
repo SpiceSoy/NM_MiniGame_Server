@@ -13,7 +13,7 @@
 #include "Define/DataTypes.h"
 #include <type_traits>
 #include <chrono>
-#include <math.h>
+#include <cmath>
 
 using namespace std::literals::chrono_literals;
 
@@ -45,14 +45,14 @@ namespace Game
 
 
         template < typename DurationType >
-        bool IsOver( const DurationType& duration )
+        bool IsOver( const DurationType& duration ) const
         {
             auto newTime = point + duration;
             return newTime < Now().point;
         }
 
 
-        bool IsOverNow()
+        bool IsOverNow() const 
         {
             return point < Now().point;
         }

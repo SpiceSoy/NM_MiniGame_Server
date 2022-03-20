@@ -65,11 +65,13 @@ void Network::Session::ProcessSend()
 void Network::Session::ProcessReceive()
 {
     // 이름 겹쳐서 로컬변수 전문 작성
-    Int32 receivedBytes = recv( socket, ( ( char* )readBuffer.data() ) + recvBytes,
-                                readBuffer.size() * sizeof( Byte ) - recvBytes, 0 );
+    Int32 receivedBytes = recv( socket,
+                               reinterpret_cast< char* >( readBuffer.data() ) + recvBytes,
+                               readBuffer.size() * sizeof( Byte ) - recvBytes,
+                               0
+                              );
     Char* expectEnd = reinterpret_cast< Char* >( readBuffer.data() + recvBytes + receivedBytes - 1 );
-    if ( receivedBytes == 0 || receivedBytes == SOCKET_ERROR )
-        Close();
+    if ( receivedBytes == 0 || receivedBytes == SOCKET_ERROR ) Close();
     else
     {
         recvBytes += receivedBytes;
@@ -81,15 +83,13 @@ void Network::Session::ProcessReceive()
 
         while ( csr != dataEnd )
         {
-            Packet::Header* headerPtr = reinterpret_cast< Packet::Header* >( csr );
+            const Packet::Header* headerPtr = reinterpret_cast< Packet::Header* >( csr );
             if ( headerPtr->Size > recvBytes ) // 받은 데이터가 완전하지 않으면
                 break;
             // 완전하면
             //패킷 처리
-            if ( contoller )
-                contoller->OnReceivedPacket( headerPtr );
-            else
-                OnReceivedPacketInWaitting( headerPtr );
+            if ( contoller ) contoller->OnReceivedPacket( headerPtr );
+            else OnReceivedPacketInWaitting( headerPtr );
 
             //커서 이동
             csr += headerPtr->Size;
@@ -106,12 +106,10 @@ void Network::Session::ProcessReceive()
 
 void Network::Session::Close()
 {
-    if ( socket == 0 )
-        return;
+    if ( socket == 0 ) return;
     closesocket( this->socket );
     SetState( EState::Closed );
-    if ( contoller )
-        contoller->SetSession( nullptr );
+    if ( contoller ) contoller->SetSession( nullptr );
 }
 
 
@@ -154,11 +152,9 @@ void Network::Session::SetAddress( const Char* address, UInt16 port )
 
 void Network::Session::SendByte( const Byte* data, UInt64 size )
 {
-    if ( IsClosed() )
-        return;
+    if ( IsClosed() ) return;
     bool willOver = sendBytes + size > sendBuffer.size();
-    if ( willOver )
-        sendBuffer.resize( sendBuffer.size() * 2 );
+    if ( willOver ) sendBuffer.resize( sendBuffer.size() * 2 );
     memcpy_s( sendBuffer.data() + sendBytes, size, data, size );
     sendBytes += size;
 }
@@ -171,8 +167,17 @@ void Network::Session::OnReceivedPacketInWaitting( const Packet::Header* data )
         LogInput( "Request Match Find Recv\n" );
         RequestMatch req;
         req.requester = this;
-        if ( server )
-            server->AddRequest( req );
+        if ( server ) server->AddRequest( req );
+    }
+    else if( data->Type == Packet::EType::ClientRequestCancelMatch )
+    {
+        LogInput( "Request Match Cancel Recv\n" );
+        if( server )
+        {
+            server->CancelRequest( this );
+            Packet::Server::MatchCanceled packet;
+            SendPacket(&packet);
+        }
     }
 }
 
@@ -184,9 +189,9 @@ void Network::Session::SetRoom( Game::Room* room )
 }
 
 
-void Network::Session::SetController( Game::PlayerController* contoller )
+void Network::Session::SetController( Game::PlayerController* controller )
 {
-    this->contoller = contoller;
+    this->contoller = controller;
 }
 
 

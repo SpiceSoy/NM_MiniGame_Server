@@ -15,6 +15,7 @@
 #include "Define/MapData.h"
 #include "Game/Room.h"
 #include "Game/PlayerController.h"
+#include <algorithm>
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -65,6 +66,11 @@ Void Network::Server::Process()
         }
         prev = now;
         UpdateRooms( delta.count() / 1000.0f );
+        if( turnOnMatch )
+        {
+            QueuingMatch( );
+            turnOnMatch = false;
+        }
     }
     return;
 }
@@ -72,7 +78,21 @@ Void Network::Server::Process()
 
 void Network::Server::AddRequest( const RequestMatch& req )
 {
-    matchQueue.push( req );
+    matchQueue.push_back( req );
+    turnOnMatch = true;
+}
+
+
+void Network::Server::CancelRequest( Session* requester )
+{
+    auto it = std::find_if( matchQueue.begin(), matchQueue.end(), 
+        [requester] ( const RequestMatch& match )
+        {
+            return match.requester == requester;
+        } 
+    );
+    matchQueue.erase( it );
+    turnOnMatch = true;
 }
 
 
@@ -171,8 +191,11 @@ void Network::Server::Select()
         {
             char addressStringBuffer[ 512 ];
             ZeroMemory( addressStringBuffer, sizeof( addressStringBuffer ) );
-            const char* addrString = inet_ntop( AF_INET, &clientAddr.sin_addr, addressStringBuffer,
-                                                sizeof( addressStringBuffer ) );
+            const char* addrString = inet_ntop( AF_INET,
+                                               &clientAddr.sin_addr,
+                                               addressStringBuffer,
+                                               sizeof( addressStringBuffer )
+                                              );
 
             UInt16 port = ntohs( clientAddr.sin_port );
 
@@ -185,36 +208,35 @@ void Network::Server::Select()
     //Recv
     for ( Session& session : sessions )
     {
-        if ( !FD_ISSET( session.GetSocket(), &read ) )
-            continue;
+        if ( !FD_ISSET( session.GetSocket(), &read ) ) continue;
         session.ProcessReceive();
     }
     //Send
     for ( Session& session : sessions )
     {
-        if ( !FD_ISSET( session.GetSocket(), &write ) )
-            continue;
+        if ( !FD_ISSET( session.GetSocket(), &write ) ) continue;
         session.ProcessSend();
     }
     //Except
     for ( Session& session : sessions )
     {
-        if ( !FD_ISSET( session.GetSocket(), &except ) )
-            continue;
+        if ( !FD_ISSET( session.GetSocket(), &except ) ) continue;
         session.Close();
         session.LogInput( "connection error" );
     }
     RemoveExpiredSession();
-    QueuingMatch();
 }
 
 
 void Network::Server::RemoveExpiredSession()
 {
-    auto it = std::remove_if( sessions.begin(), sessions.end(), []( Session& session )
-                                  {
-                                      return session.IsClosed();
-                                  } );
+    auto it = std::remove_if( sessions.begin(),
+                             sessions.end(),
+                             []( Session& session )
+                             {
+                                 return session.IsClosed();
+                             }
+                            );
     sessions.erase( it, sessions.end() );
 }
 
@@ -228,21 +250,35 @@ Network::Session& Network::Server::AddNewSession( SocketHandle socket )
 
 void Network::Server::QueuingMatch()
 {
-    if ( matchQueue.empty() )
-        return;
-    // 임시용 한명마다 방 생성
-    while ( matchQueue.size() >= Constant::MaxUserCount )
+    if ( matchQueue.empty() ) return;
+    while ( true )
     {
-        auto& room = AddNewRoom( Constant::MaxUserCount );
-        std::cout << "Queuing Request Matches\n";
-        for ( Int32 i = 0; i < Constant::MaxUserCount; i++ )
+        if( matchQueue.size( ) >= Constant::MaxUserCount )
         {
-            RequestMatch& request = matchQueue.front();
-            request.requester->SetRoom( &room );
-            request.requester->SetController( room.GetNewPlayerController( i, request.requester ) );
-            matchQueue.pop();
+            auto& room = AddNewRoom( Constant::MaxUserCount );
+            std::cout << "Queuing Request Matches\n";
+            for ( Int32 i = 0; i < Constant::MaxUserCount; i++ )
+            {
+                RequestMatch& request = matchQueue.front();
+                request.requester->SetRoom( &room );
+                request.requester->SetController( room.GetNewPlayerController( i, request.requester ) );
+                matchQueue.pop_front();
+            }
+            room.ReadyToGame();
         }
-        room.ReadyToGame();
+        else
+        {
+            Int32 remainUser = matchQueue.size();
+            for( RequestMatch& req : matchQueue )
+            {
+                std::cout << "SendMatchPacket" << std::endl;
+                Packet::Server::ChangeMatchingInfo packet;
+                packet.currentUser = remainUser;
+                packet.maxUser = Constant::MaxUserCount;
+                req.requester->SendPacket(&packet);
+            }
+            return;
+        }
     }
 }
 

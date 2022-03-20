@@ -29,8 +29,10 @@ namespace Packet
         ServerChangeMatchingInfo,
         ServerEndOfMatching,
         ServerEndGame,
+        ServerKillLog,
         ServerRushUsed,
         ServerStartGame,
+        ServerMatchCanceled,
         ClientTypeStart = 0x80,
         ClientRequestFindMatch,
         ClientRequestCancelMatch,
@@ -75,6 +77,11 @@ namespace Packet
             Int32 userCount;
         };
 
+        struct MatchCanceled
+        {
+            Header header = SERVER_HEADER( MatchCanceled );
+        };
+
         struct PlayerRushCountChanged
         {
             Header header = SERVER_HEADER( PlayerRushCountChanged );
@@ -97,7 +104,7 @@ namespace Packet
         struct EndGame
         {
             Header header = SERVER_HEADER( EndGame );
-            Int32 scores[ 6 ];
+            Int32 scores[ 4 ];
         };
 
         struct RushUsed
@@ -105,6 +112,14 @@ namespace Packet
             Header header = SERVER_HEADER( RushUsed );
             Int32 currentRushStack;
         };
+
+        struct KillLog
+        {
+            Header header = SERVER_HEADER( KillLog );
+            Int32 victimIndex;
+            Int32 killerIndex;
+        };
+
 
         struct ObjectLocation
         {

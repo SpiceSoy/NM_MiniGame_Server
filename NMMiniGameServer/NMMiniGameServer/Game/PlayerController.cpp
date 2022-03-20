@@ -52,6 +52,12 @@ static const char* to_string( Game::EPlayerState e )
 }
 
 
+Int32 Game::PlayerController::GetPlayerIndex() const
+{
+    return playerIndex;
+}
+
+
 Game::PlayerController::PlayerController()
 {
     this->AddStateFunctions();
@@ -96,16 +102,14 @@ void Game::PlayerController::Initialize()
 
 void Game::PlayerController::SendByte( const Byte* data, UInt64 size ) const
 {
-    if ( !session )
-        return;
+    if ( !session ) return;
     session->SendByte( data, size );
 }
 
 
 void Game::PlayerController::Update( Double deltaTime )
 {
-    if ( !character )
-        return;
+    if ( !character ) return;
     fsm.Update( deltaTime );
 
     // 러시 개수 체크
@@ -123,8 +127,7 @@ void Game::PlayerController::Update( Double deltaTime )
 
 void Game::PlayerController::OnReceivedPacket( const Packet::Header* ptr )
 {
-    if ( !ptr )
-        return;
+    if ( !ptr ) return;
     switch ( ptr->Type )
     {
         case Packet::EType::ClientInput :
@@ -148,9 +151,9 @@ void Game::PlayerController::ChangeState( EPlayerState state )
 
 void Game::PlayerController::UseRush()
 {
-    timerRushUse.SetNow().Add( Constant::RushRecastTime );
+    timerRushUse.SetNow().Add( Constant::RushMinimumRecastTime );
     rushQueue.pop_front();
-    rushQueue.emplace_back( Timer::Now().Add( Constant::RushRegenSeconds ) );
+    rushQueue.emplace_back( Timer::Now().Add( Constant::RushCountRegenTime ) );
     character->AddSpeed( character->GetForward() * Constant::CharacterRushSpeed );
     rushCount -= 1;
     SendRushCountChangedPacket();
@@ -161,8 +164,7 @@ bool Game::PlayerController::CanRush()
 {
     bool canRecast = timerRushUse.IsOverNow();
     bool hasRushCount = rushQueue.front().IsOverNow();
-    if ( hasRushCount && canRecast )
-        return true;
+    if ( hasRushCount && canRecast ) return true;
     return false;
 }
 
@@ -224,6 +226,20 @@ void Game::PlayerController::BroadcastObjectLocation( bool isSetHeight ) const
 }
 
 
+void Game::PlayerController::OnCollided( const PlayerController& other )
+{
+    lastCollidedPlayerIndex = other.GetPlayerIndex();
+    timerLastCollided.SetNow();
+}
+
+
+Int32 Game::PlayerController::GetLastCollidedPlayerIndex() const
+{
+    if ( timerLastCollided.IsOver( Constant::KillerJudgeTime ) ) return Constant::NullPlayerIndex;
+    else return lastCollidedPlayerIndex;
+}
+
+
 void Game::PlayerController::SendStateChangedPacket( EPlayerState state ) const
 {
     Packet::Server::ObjectStateChanged packet;
@@ -261,8 +277,8 @@ void Game::PlayerController::AddStateFunctions()
                                     this->SendStateChangedPacket();
                                     this->character->SetMoveSpeed( 0 );
                                     TimeSecond waitTime = prevState == EPlayerState::Die
-                                                              ? Constant::RespawnSeconds
-                                                              : Constant::FirstSpawnWaitSeconds;
+                                                              ? Constant::RespawnTime
+                                                              : Constant::FirstWaitTime;
                                     this->timerSpawnStart.SetNow().Add( waitTime );
                                     return StateFuncResult< EPlayerState >::NoChange();
                                 }
@@ -468,7 +484,7 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnUpdate( EPlayerState::Die,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
-                                     if ( timerRespawnStart.IsOver( Constant::RespawnSeconds ) )
+                                     if ( timerRespawnStart.IsOver( Constant::RespawnTime ) )
                                      {
                                          character->SetLocation( room->GetSpawnLocation( playerIndex ) );
                                          character->SetSpeed( Vector::Zero() );

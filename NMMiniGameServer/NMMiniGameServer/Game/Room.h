@@ -39,6 +39,7 @@ namespace Game
         const Int32 maxUserCount = 0;
         std::vector< PlayerController > players;
         std::vector< PlayerCharacter > characters;
+        std::vector< Int32 > scores;
         Timer startTime;
         ERoomState state;
     public:
@@ -57,11 +58,13 @@ namespace Game
 
         void BroadcastByte( const Byte* data, UInt32 size );
         void BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex );
-        void CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr );
+        bool CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr );
         Vector GetSpawnLocation( UInt32 index ) const;
         Vector GetSpawnForward( UInt32 index ) const;
         ERoomState GetState() const;
         void SetState( ERoomState state );
+        void BroadcastKillLogPacket( Int32 playerIndex, Int32 killerIndex );
+        void OnDiePlayer( const PlayerController* player );
     private:
         void CheckCollision( Double deltaTime );
 

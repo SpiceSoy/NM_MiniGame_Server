@@ -42,6 +42,7 @@ Game::Room::Room( Int32 userCount )
 {
     players.resize( userCount );
     characters.resize( userCount );
+    scores.resize( userCount );
 }
 
 
@@ -87,7 +88,7 @@ void Game::Room::Update( Double deltaTime )
         BroadcastStartGame();
     }
     // ³¡³µ´Â°¡?
-    if ( state == ERoomState::Doing && startTime.IsOver( Constant::GameLengthSeconds ) )
+    if ( state == ERoomState::Doing && startTime.IsOver( Constant::TotalGameTime ) )
     {
         SetState( ERoomState::End );
         LogLine( "End of Game" );
@@ -112,7 +113,7 @@ void Game::Room::ReadyToGame()
     }
     SetState( ERoomState::Waited );
     LogLine( "Ready of Game" );
-    startTime.SetNow().Add( Constant::FirstSpawnWaitSeconds );
+    startTime.SetNow().Add( Constant::FirstWaitTime );
 }
 
 
@@ -128,7 +129,7 @@ void Game::Room::BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUse
 }
 
 
-void Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr )
+bool Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr )
 {
     bool isCollide = IsCollide( firstChr, secondChr );
     bool isLastCollided = firstChr.GetColliderFillter( secondChr ) || secondChr.GetColliderFillter( firstChr );
@@ -136,8 +137,6 @@ void Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerChara
     {
         firstChr.TurnOnColliderFillter( secondChr );
         secondChr.TurnOnColliderFillter( firstChr );
-
-        //std::cout << "Collide!" << std::endl;
 
         Vector normal = firstChr.GetLocation() - secondChr.GetLocation();
         normal.Normalize();
@@ -158,18 +157,17 @@ void Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerChara
             firstChr.SetLocation( firstChr.GetLocation() + firstReflected * 0.1f );
             secondChr.SetLocation( secondChr.GetLocation() + secondReflected * 0.1f );
         }
+        return true;
     }
-    else
-    {
-        firstChr.TurnOffColliderFillter( secondChr );
-        secondChr.TurnOffColliderFillter( firstChr );
-    }
+
+    firstChr.TurnOffColliderFillter( secondChr );
+    secondChr.TurnOffColliderFillter( firstChr );
+    return false;
 }
 
 
 void Game::Room::CheckCollision( Double deltaTime )
 {
-    //std::cout << "CollideFrame" << std::endl;
     for ( Int32 first = 0; first < maxUserCount; first++ )
     {
         PlayerCharacter& firstChr = characters[ first ];
@@ -177,11 +175,20 @@ void Game::Room::CheckCollision( Double deltaTime )
         for ( Int32 second = first + 1; second < maxUserCount; second++ )
         {
             PlayerCharacter& secondChr = characters[ second ];
-            CheckCollisionTwoPlayer( firstChr, secondChr );
+            PlayerController& secondCon = players[ second ];
+            bool isCollide = CheckCollisionTwoPlayer( firstChr, secondChr );
+            if ( isCollide )
+            {
+                firstCon.OnCollided( secondCon );
+                secondCon.OnCollided( firstCon );
+            }
         }
         bool isOutOfMap = firstChr.GetLocation().GetLength() > Constant::MapSize;
         if ( isOutOfMap && firstCon.GetState() != EPlayerState::Die )
+        {
             firstCon.ChangeState( EPlayerState::Die );
+            OnDiePlayer( &firstCon );
+        }
     }
 }
 
@@ -198,8 +205,7 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 {
     for ( PlayerController& player : players )
     {
-        if ( &player == expectedUser )
-            continue;
+        if ( &player == expectedUser ) continue;
         player.SendByte( data, size );
     }
 }
@@ -208,7 +214,7 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 void Game::Room::BroadcastStartGame()
 {
     Packet::Server::StartGame packet;
-    packet.GameTime = std::chrono::duration_cast< std::chrono::seconds >( Constant::GameLengthSeconds ).count();
+    packet.GameTime = std::chrono::duration_cast< std::chrono::seconds >( Constant::TotalGameTime ).count();
     BroadcastPacket( &packet );
 }
 
@@ -216,6 +222,8 @@ void Game::Room::BroadcastStartGame()
 void Game::Room::BroadcastEndGame()
 {
     Packet::Server::EndGame packet;
+    std::memset( packet.scores, 0, sizeof( packet.scores ) );
+    std::memcpy( packet.scores, scores.data(), scores.size() * sizeof( scores[ 0 ] ) );
     BroadcastPacket( &packet );
 }
 
@@ -261,4 +269,35 @@ Game::ERoomState Game::Room::GetState() const
 void Game::Room::SetState( ERoomState state )
 {
     this->state = state;
+}
+
+
+void Game::Room::BroadcastKillLogPacket( Int32 playerIndex, Int32 killerIndex )
+{
+    Packet::Server::KillLog packet;
+    packet.killerIndex = killerIndex;
+    packet.victimIndex = playerIndex;
+    BroadcastPacket( &packet );
+}
+
+
+void Game::Room::OnDiePlayer( const PlayerController* player )
+{
+    Int32 playerIndex = player->GetPlayerIndex();
+    Int32 killerIndex = player->GetLastCollidedPlayerIndex();
+    bool hasKiller = killerIndex != Constant::NullPlayerIndex;
+    Int32 PlayerScore = hasKiller ? Constant::DieScore : Constant::SelfDieScore;
+    scores[ playerIndex ] += PlayerScore;
+
+    if ( hasKiller )
+    {
+        scores[ killerIndex ] += Constant::KillerScore;
+        LogLine( "P[%d] Die By P[%d]", playerIndex, killerIndex );
+    }
+    else
+    {
+        LogLine( "P[%d] Die By Self", playerIndex );
+    }
+
+    BroadcastKillLogPacket( playerIndex, killerIndex );
 }

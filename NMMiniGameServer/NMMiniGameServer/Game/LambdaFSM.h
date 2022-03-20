@@ -89,8 +89,7 @@ namespace Game
             else
             {
                 StateFuncResult< EStateEnum > result = it->second( deltaTime );
-                if ( result.isChange )
-                    ChangeState( result.nextState, true );
+                if ( result.isChange ) ChangeState( result.nextState, true );
             }
         }
 
@@ -105,8 +104,7 @@ namespace Game
             else
             {
                 StateFuncResult< EStateEnum > result = it->second( input );
-                if ( result.isChange )
-                    ChangeState( result.nextState, true );
+                if ( result.isChange ) ChangeState( result.nextState, true );
             }
         }
 
@@ -183,8 +181,7 @@ namespace Game
                 {
                     std::cout << "FSM has unspecific state Exit" << static_cast< int >( currentState ) << std::endl;
                 }
-                else
-                    exitFuncIt->second( oldState );
+                else exitFuncIt->second( oldState );
             }
 
             auto enterFuncIt = onEnterFunctions.find( state );
@@ -195,8 +192,7 @@ namespace Game
             else
             {
                 StateFuncResult< EStateEnum > result = enterFuncIt->second( oldState );
-                if ( result.isChange )
-                    ChangeState( result.nextState, true );
+                if ( result.isChange ) ChangeState( result.nextState, true );
             }
         }
     };

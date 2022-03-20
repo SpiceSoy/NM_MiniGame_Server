@@ -127,10 +127,8 @@ void Game::PlayerCharacter::Update( Double deltaTime )
     if ( !speed.IsZero() )
     {
         Vector Friction = -speed.Normalized() * Constant::CharacterFriction * deltaTime * 2.0f;
-        if ( speed.GetSqr() < Friction.GetSqr() )
-            speed = Vector::Zero();
-        else
-            speed = speed + Friction;
+        if ( speed.GetSqr() < Friction.GetSqr() ) speed = Vector::Zero();
+        else speed = speed + Friction;
     }
 }
 

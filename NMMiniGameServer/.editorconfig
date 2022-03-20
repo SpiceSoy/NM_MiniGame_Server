@@ -1,0 +1,94 @@
+
+[*.{appxmanifest,axaml,axml,build,config,csproj,dbml,discomap,dtd,jsproj,lsproj,njsproj,nuspec,paml,proj,props,resw,resx,StyleCop,targets,tasks,vbproj,xaml,xamlx,xml,xoml,xsd}]
+indent_style = tab
+indent_size = tab
+tab_width = 4
+
+[*.{c,c++,cc,cginc,compute,cp,cpp,cs,cu,cuh,cxx,h,hh,hlsl,hlsli,hlslinc,hpp,hxx,inc,inl,ino,ipp,mpp,mq4,mq5,mqh,tpp,usf,ush,vb}]
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+[*]
+
+# Microsoft .NET properties
+csharp_new_line_before_members_in_object_initializers = false
+csharp_preferred_modifier_order = public, private, protected, internal, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async:suggestion
+csharp_space_after_cast = true
+csharp_style_var_elsewhere = true:suggestion
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+dotnet_style_parentheses_in_arithmetic_binary_operators = never_if_unnecessary:none
+dotnet_style_parentheses_in_other_binary_operators = never_if_unnecessary:none
+dotnet_style_parentheses_in_relational_binary_operators = never_if_unnecessary:none
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+file_header_template = =================================================================================================\n @file {fileName}\n\n @brief 상세 설명을 입력하시오\n \n @date $CREATED_YEAR$/$CREATED_MONTH$/$CREATED_DAY$\n\n Copyright $CURRENT_YEAR$ 2022 Netmarble Neo, Inc. All Rights Reserved.\n=================================================================================================\n
+
+# ReSharper properties
+resharper_align_multiline_binary_expressions_chain = true
+resharper_align_multiline_expression_braces = true
+resharper_autodetect_indent_settings = true
+resharper_blank_lines_around_function_definition = 2
+resharper_blank_lines_around_single_line_function_definition = 1
+resharper_continuous_line_indent = double
+resharper_cpp_align_first_arg_by_paren = true
+resharper_cpp_align_multiline_argument = false
+resharper_cpp_allow_far_alignment = true
+resharper_cpp_blank_lines_around_namespace = 2
+resharper_cpp_indent_invocation_pars = outside_and_inside
+resharper_cpp_indent_method_decl_pars = outside_and_inside
+resharper_cpp_int_align_comments = true
+resharper_cpp_int_align_fix_in_adjacent = false
+resharper_cpp_keep_user_linebreaks = false
+resharper_cpp_outdent_commas = true
+resharper_cpp_outdent_dots = true
+resharper_cpp_space_before_colon_in_case = true
+resharper_cpp_space_between_method_call_parameter_list_parentheses = true
+resharper_cpp_space_between_method_declaration_parameter_list_parentheses = true
+resharper_cpp_space_between_parentheses_of_control_flow_statements = true
+resharper_cpp_space_between_square_brackets = true
+resharper_cpp_space_between_typecast_parentheses = true
+resharper_cpp_space_within_parentheses = true
+resharper_cpp_use_indent_from_vs = false
+resharper_cpp_wrap_arguments_style = chop_if_long
+resharper_cpp_wrap_before_invocation_rpar = true
+resharper_disable_space_changes_before_trailing_comment = true
+resharper_function_declaration_return_type_style = on_single_line
+resharper_function_definition_return_type_style = on_single_line
+resharper_indent_preprocessor_directives = normal
+resharper_indent_switch_labels = true
+resharper_line_break_before_requires_clause = on_single_line
+resharper_linkage_specification_indentation = all
+resharper_member_initializer_list_style = line_break
+resharper_simple_block_style = line_break
+resharper_simple_case_statement_style = line_break
+resharper_simple_embedded_statement_style = on_single_line
+resharper_space_within_empty_template_params = true
+resharper_space_within_initializer_braces = true
+resharper_space_within_single_line_array_initializer_braces = false
+resharper_space_within_template_args = true
+resharper_space_within_template_params = true
+resharper_toplevel_function_declaration_return_type_style = on_single_line
+resharper_toplevel_function_definition_return_type_style = on_single_line
+resharper_use_continuous_line_indent_in_method_pars = true
+
+# ReSharper inspection severities
+resharper_arrange_redundant_parentheses_highlighting = hint
+resharper_arrange_this_qualifier_highlighting = hint
+resharper_arrange_type_member_modifiers_highlighting = hint
+resharper_arrange_type_modifiers_highlighting = hint
+resharper_built_in_type_reference_style_for_member_access_highlighting = hint
+resharper_built_in_type_reference_style_highlighting = hint
+resharper_convert_to_constant_global_highlighting = none
+resharper_convert_to_constant_local_highlighting = none
+resharper_cpp_local_variable_may_be_const_highlighting = none
+resharper_redundant_base_qualifier_highlighting = warning
+resharper_suggest_var_or_type_built_in_types_highlighting = hint
+resharper_suggest_var_or_type_elsewhere_highlighting = hint
+resharper_suggest_var_or_type_simple_types_highlighting = hint

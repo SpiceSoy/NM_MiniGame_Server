@@ -79,10 +79,17 @@ namespace Network
         void Close();
         void SetAddress( const Char* address, UInt16 port );
         void LogInput( const Char* input ) const;
+        template < class PacketType >
+        void SendPacket( const PacketType* buffer );
         void SendByte( const Byte* data, UInt64 size );
         void OnReceivedPacketInWaitting( const Packet::Header* data );
 
         void SetRoom( Game::Room* room );
-        void SetController( Game::PlayerController* contoller );
+        void SetController( Game::PlayerController* controller );
     };
+    template < class PacketType >
+    void Session::SendPacket( const PacketType* buffer )
+    {
+        SendByte( reinterpret_cast<const Byte*>( buffer ), sizeof( PacketType ) );
+    }
 };
