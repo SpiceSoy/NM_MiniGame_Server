@@ -20,7 +20,7 @@ namespace Constant
     using namespace std::chrono_literals;
     // Server
     constexpr UInt32 TickTerm = 1000 / 60;
-    constexpr UInt32 MaxUserCount = 2;
+    constexpr UInt32 MaxUserCount = 4;
     // Map
     constexpr Double MapSize = 1300;
     constexpr Double SpawnPointRatio = 0.75;
@@ -50,7 +50,7 @@ namespace Constant
     constexpr TimeSecond RushCountRegenTime = 7.0s;
     constexpr TimeSecond RespawnTime = 1.5s;
     constexpr TimeSecond FirstWaitTime = 1.5s;
-    constexpr TimeSecond TotalGameTime = 60s;
+    constexpr TimeSecond TotalGameTime = 15s;
     constexpr TimeSecond RushMinimumRecastTime = 1s;
     constexpr TimeSecond KillerJudgeTime = 1s; // 공격 판정 남는 시간
 

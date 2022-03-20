@@ -107,16 +107,16 @@ void Network::Server::PostReadyMatch( Session* requester )
                           );
     if ( it != readyMatches.end() )
     {
-        it->readyUserCount += 1;
-        if ( it->readyUserCount >= it->userCount )
+        Int32 index = std::distance( it->users.begin( ), std::find( it->users.begin( ), it->users.end( ), requester ) );
+        it->userReadys[index] = true;
+        if( std::all_of( it->userReadys.begin( ), it->userReadys.end( ), [] ( bool rdy ) {return rdy; } ) )
         {
+   
             auto& room = AddNewRoom( Constant::MaxUserCount );
             std::cout << "Queuing Request Matches\n";
             for ( Int32 i = 0; i < Constant::MaxUserCount; i++ )
             {
-                Session* user = it->users[ i ];
-                user->SetRoom( &room );
-                user->SetController( room.GetNewPlayerController( i, user ) );
+                room.AddSession( i, it->users[i] );
             }
             room.ReadyToGame();
             readyMatches.erase( it );
@@ -314,7 +314,6 @@ void Network::Server::QueuingMatch()
         {
             ReadyMatch readyMatch;
             readyMatch.userCount = Constant::MaxUserCount;
-            readyMatch.readyUserCount = 0;
             Packet::Server::ReadyMatching packet;
             packet.maxUser = Constant::MaxUserCount;
             for ( Int32 i = 0; i < Constant::MaxUserCount; i++ )
@@ -322,6 +321,7 @@ void Network::Server::QueuingMatch()
                 RequestMatch& request = matchQueue.front();
                 packet.playerIndex = i;
                 readyMatch.users[ i ] = request.requester;
+                readyMatch.userReadys[i] = false;
                 request.requester->SendPacket( &packet );
                 matchQueue.pop_front();
             }

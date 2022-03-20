@@ -12,6 +12,7 @@
 #include "Game/Room.h"
 #include "Define/MapData.h"
 #include "Define/PacketDefine.h"
+#include "Network/Session.h"
 #include <cstdarg>
 #include <iostream>
 
@@ -42,6 +43,7 @@ Game::Room::Room( Int32 userCount )
 {
     players.resize( userCount );
     characters.resize( userCount );
+    sessions.resize( userCount );
     scores.resize( userCount );
 }
 
@@ -63,6 +65,14 @@ Game::PlayerController* Game::Room::GetNewPlayerController( Int32 index, Network
     character.SetForward( GetSpawnForward( index ) );
 
     return &instance;
+}
+
+
+void Game::Room::AddSession( Int32 index, Network::Session* session)
+{
+    sessions[index] = session;
+    session->SetRoom( this );
+    session->SetController( GetNewPlayerController( index, session ) );
 }
 
 
@@ -93,6 +103,10 @@ void Game::Room::Update( Double deltaTime )
         SetState( ERoomState::End );
         LogLine( "End of Game" );
         BroadcastEndGame();
+        for( Network::Session* i : sessions )
+        {
+            i->ClearRoomData();
+        }
     }
 }
 

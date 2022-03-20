@@ -39,13 +39,14 @@ namespace Game
         const Int32 maxUserCount = 0;
         std::vector< PlayerController > players;
         std::vector< PlayerCharacter > characters;
+        std::vector< Network::Session* > sessions;
         std::vector< Int32 > scores;
         Timer startTime;
         ERoomState state;
     public:
         Room( Int32 userCount );
         ~Room();
-        PlayerController* GetNewPlayerController( Int32 index, Network::Session* session );
+        void AddSession( Int32 index, Network::Session* session );
         void Update( Double deltaTime );
 
         void ReadyToGame();
@@ -74,6 +75,7 @@ namespace Game
         void BroadcastStartGame();
         void BroadcastEndGame();
         void LogLine( const char* format, ... ) const;
+        PlayerController* GetNewPlayerController( Int32 index, Network::Session* session );
     };
 
     // 템플릿 함수들

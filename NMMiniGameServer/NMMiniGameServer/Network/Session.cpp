@@ -143,6 +143,13 @@ Bool Network::Session::IsClosed() const
 }
 
 
+void Network::Session::ClearRoomData()
+{
+    this->room = nullptr;
+    this->contoller = nullptr;
+}
+
+
 void Network::Session::SetAddress( const Char* address, UInt16 port )
 {
     addressText = address;

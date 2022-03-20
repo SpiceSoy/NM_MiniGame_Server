@@ -71,6 +71,7 @@ namespace Network
         UInt16 GetPort() const;
         EState GetState() const;
         Bool IsClosed() const;
+        void ClearRoomData();
     public:
         void SetState( EState state );
         void ProcessSend();
