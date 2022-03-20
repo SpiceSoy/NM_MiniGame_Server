@@ -56,8 +56,7 @@ Void Network::Server::Process()
         Select();
         auto now = std::chrono::system_clock::now();
         auto delta = std::chrono::duration_cast< std::chrono::milliseconds >( now - prev );
-        auto expected = std::chrono::duration_cast<
-            std::chrono::milliseconds >( std::chrono::milliseconds( Constant::TickTerm ) );
+        auto expected = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::milliseconds( Constant::TickTerm ) );
         if ( expected > delta )
         {
             std::this_thread::sleep_for( expected - delta );
@@ -66,9 +65,9 @@ Void Network::Server::Process()
         }
         prev = now;
         UpdateRooms( delta.count() / 1000.0f );
-        if( turnOnMatch )
+        if ( turnOnMatch )
         {
-            QueuingMatch( );
+            QueuingMatch();
             turnOnMatch = false;
         }
     }
@@ -85,14 +84,76 @@ void Network::Server::AddRequest( const RequestMatch& req )
 
 void Network::Server::CancelRequest( Session* requester )
 {
-    auto it = std::find_if( matchQueue.begin(), matchQueue.end(), 
-        [requester] ( const RequestMatch& match )
-        {
-            return match.requester == requester;
-        } 
-    );
+    auto it = std::find_if( matchQueue.begin(),
+                           matchQueue.end(),
+                           [requester]( const RequestMatch& match )
+                           {
+                               return match.requester == requester;
+                           }
+                          );
     matchQueue.erase( it );
     turnOnMatch = true;
+}
+
+
+void Network::Server::PostReadyMatch( Session* requester )
+{
+    auto it = std::find_if( readyMatches.begin(),
+                           readyMatches.end(),
+                           [requester, this]( const ReadyMatch& ready )
+                           {
+                               return ready.users.end() != std::find( ready.users.begin(), ready.users.end(), requester );
+                           }
+                          );
+    if ( it != readyMatches.end() )
+    {
+        it->readyUserCount += 1;
+        if ( it->readyUserCount >= it->userCount )
+        {
+            auto& room = AddNewRoom( Constant::MaxUserCount );
+            std::cout << "Queuing Request Matches\n";
+            for ( Int32 i = 0; i < Constant::MaxUserCount; i++ )
+            {
+                Session* user = it->users[ i ];
+                user->SetRoom( &room );
+                user->SetController( room.GetNewPlayerController( i, user ) );
+            }
+            room.ReadyToGame();
+            readyMatches.erase( it );
+        }
+    }
+}
+
+
+void Network::Server::PostCancelReadyMatch( Session* requester )
+{
+    auto it = std::find_if( readyMatches.begin(),
+                           readyMatches.end(),
+                           [requester, this]( const ReadyMatch& ready )
+                           {
+                               return ready.users.end() != std::find( ready.users.begin(), ready.users.end(), requester );
+                           }
+                          );
+    if ( it != readyMatches.end() )
+    {
+        for ( Session* i : it->users )
+        {
+            Packet::Server::CancelReadyMatching packet;
+            i->SendPacket( &packet );
+
+            if ( i != requester )
+            {
+                RequestMatch req;
+                req.requester = i;
+                AddRequest( req );
+            }
+            std::cout << "Add Request " << std::endl;
+        }
+    }
+    std::cout <<"Cancel Match Ready " << requester << std::endl;
+    readyMatches.erase( it );
+    Packet::Server::MatchCanceled packet;
+    requester->SendPacket( &packet );
 }
 
 
@@ -191,11 +252,7 @@ void Network::Server::Select()
         {
             char addressStringBuffer[ 512 ];
             ZeroMemory( addressStringBuffer, sizeof( addressStringBuffer ) );
-            const char* addrString = inet_ntop( AF_INET,
-                                               &clientAddr.sin_addr,
-                                               addressStringBuffer,
-                                               sizeof( addressStringBuffer )
-                                              );
+            const char* addrString = inet_ntop( AF_INET, &clientAddr.sin_addr, addressStringBuffer, sizeof( addressStringBuffer ) );
 
             UInt16 port = ntohs( clientAddr.sin_port );
 
@@ -253,29 +310,34 @@ void Network::Server::QueuingMatch()
     if ( matchQueue.empty() ) return;
     while ( true )
     {
-        if( matchQueue.size( ) >= Constant::MaxUserCount )
+        if ( matchQueue.size() >= Constant::MaxUserCount )
         {
-            auto& room = AddNewRoom( Constant::MaxUserCount );
-            std::cout << "Queuing Request Matches\n";
+            ReadyMatch readyMatch;
+            readyMatch.userCount = Constant::MaxUserCount;
+            readyMatch.readyUserCount = 0;
+            Packet::Server::ReadyMatching packet;
+            packet.maxUser = Constant::MaxUserCount;
             for ( Int32 i = 0; i < Constant::MaxUserCount; i++ )
             {
                 RequestMatch& request = matchQueue.front();
-                request.requester->SetRoom( &room );
-                request.requester->SetController( room.GetNewPlayerController( i, request.requester ) );
+                packet.playerIndex = i;
+                readyMatch.users[ i ] = request.requester;
+                request.requester->SendPacket( &packet );
                 matchQueue.pop_front();
             }
-            room.ReadyToGame();
+            std::cout << "Queueueueing 3 Element" << std::endl;
+            readyMatches.emplace_back( readyMatch );
         }
         else
         {
             Int32 remainUser = matchQueue.size();
-            for( RequestMatch& req : matchQueue )
+            for ( RequestMatch& req : matchQueue )
             {
-                std::cout << "SendMatchPacket" << std::endl;
+                std::cout << "SendMatchPacket To " << req.requester  << std::endl;
                 Packet::Server::ChangeMatchingInfo packet;
                 packet.currentUser = remainUser;
                 packet.maxUser = Constant::MaxUserCount;
-                req.requester->SendPacket(&packet);
+                req.requester->SendPacket( &packet );
             }
             return;
         }

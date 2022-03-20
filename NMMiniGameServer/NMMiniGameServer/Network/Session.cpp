@@ -176,7 +176,25 @@ void Network::Session::OnReceivedPacketInWaitting( const Packet::Header* data )
         {
             server->CancelRequest( this );
             Packet::Server::MatchCanceled packet;
-            SendPacket(&packet);
+            SendPacket( &packet );
+            LogInput( "Request Match Cancel Recv\n" );
+        }
+    }
+    else if( data->Type == Packet::EType::ClientRequestReadyMatch )
+    {
+        LogInput( "Request Match Ready Recv\n" );
+        if( server )
+        {
+            server->PostReadyMatch( this );
+        }
+    }
+    else if( data->Type == Packet::EType::ClientRequestCancelReadyMatch )
+    {
+        LogInput( "Request Match Cancel Ready Recv");
+        std::cout << this << std::endl;
+        if( server )
+        {
+            server->PostCancelReadyMatch( this );
         }
     }
 }

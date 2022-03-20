@@ -11,7 +11,9 @@
 
 #pragma once
 #include "Define/DataTypes.h"
+#include "Define/MapData.h"
 #include "Network/Session.h"
+#include <array>
 #include <list>
 #include <memory>
 #include <queue>
@@ -33,6 +35,14 @@ namespace Network
         Session* requester = nullptr;
     };
 
+    struct ReadyMatch
+    {
+        std::chrono::system_clock::time_point reqTime;
+        Int32 userCount = Constant::MaxUserCount;
+        Int32 readyUserCount = 0;
+        std::array< Session*, Constant::MaxUserCount > users;
+    };
+
     class Server
     {
     private:
@@ -41,6 +51,7 @@ namespace Network
         std::list< Game::Room > rooms;
         std::list< Session > sessions;
         std::list< RequestMatch > matchQueue;
+        std::list< ReadyMatch > readyMatches;
         bool turnOnMatch = false;
     public:
         Server();
@@ -49,6 +60,8 @@ namespace Network
         Void Process();
         void AddRequest( const RequestMatch& req );
         void CancelRequest( Session* requester );
+        void PostReadyMatch( Session* requester );
+        void PostCancelReadyMatch( Session* requester );
     private:
         void InitializeSocket();
         void CreateListenSocket();
