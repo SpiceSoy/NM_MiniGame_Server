@@ -39,8 +39,9 @@ namespace Network
     {
         std::chrono::system_clock::time_point reqTime;
         Int32 userCount = Constant::MaxUserCount;
-        std::array< bool, Constant::MaxUserCount > userReadys;
-        std::array< Session*, Constant::MaxUserCount > users;
+        std::vector< bool > userReadys;
+        std::vector< Session* > users;
+        ReadyMatch();
     };
 
     class Server

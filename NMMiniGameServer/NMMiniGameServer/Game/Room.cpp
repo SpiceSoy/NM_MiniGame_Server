@@ -13,6 +13,7 @@
 #include "Define/MapData.h"
 #include "Define/PacketDefine.h"
 #include "Network/Session.h"
+#include <cassert>
 #include <cstdarg>
 #include <iostream>
 
@@ -77,7 +78,6 @@ void Game::Room::Update( Double deltaTime )
     {
         player.Update( deltaTime );
     }
-    CheckCollision( deltaTime );
     for ( Int32 i = 0; i < maxUserCount; i++ )
     {
         PlayerCharacter& character = characters[ i ];
@@ -85,6 +85,7 @@ void Game::Room::Update( Double deltaTime )
         character.Update( deltaTime );
         controller.BroadcastObjectLocation( false );
     }
+    CheckCollision( deltaTime );
     // 시작했는가?
     if ( state == ERoomState::Waited && startTime.IsOverNow() )
     {
@@ -93,7 +94,7 @@ void Game::Room::Update( Double deltaTime )
         BroadcastStartGame();
     }
     // 끝났는가?
-    if ( state == ERoomState::Doing && startTime.IsOver( Constant::TotalGameTime ) )
+    if ( state == ERoomState::Doing && startTime.IsOverSeconds( Constant::TotalGameTime ) )
     {
         SetState( ERoomState::End );
         LogLine( "End of Game" );
@@ -122,7 +123,7 @@ void Game::Room::ReadyToGame()
     }
     SetState( ERoomState::Waited );
     LogLine( "Ready of Game" );
-    startTime.SetNow().Add( Constant::FirstWaitTime );
+    startTime.SetNow().AddSeconds( Constant::FirstWaitTime );
 }
 
 
@@ -138,40 +139,107 @@ void Game::Room::BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUse
 }
 
 
-bool Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr )
+bool Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime )
 {
-    bool isCollide = IsCollide( firstChr, secondChr );
+    Double penetration = 0.0;
+    bool isCollide = IsCollide( firstChr, secondChr, penetration );
     bool isLastCollided = firstChr.GetColliderFillter( secondChr ) || secondChr.GetColliderFillter( firstChr );
-    if ( isCollide && !isLastCollided )
+    //if( isCollide )
+    if( isCollide && !isLastCollided )
     {
         firstChr.TurnOnColliderFillter( secondChr );
         secondChr.TurnOnColliderFillter( firstChr );
 
-        Vector normal = firstChr.GetLocation() - secondChr.GetLocation();
-        normal.Normalize();
-
-        Vector firstForward = firstChr.GetForward();
-        Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized();
-        Vector firstFinalSpeed = firstChr.GetFinalSpeed();
-
-        Vector secondForward = secondChr.GetForward();
-        Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized();
-        Vector secondFinalSpeed = firstChr.GetFinalSpeed();
-
-        firstChr.SetSpeed( firstReflected * secondFinalSpeed.GetLength() * Constant::CollideForceRatio );
-        secondChr.SetSpeed( secondReflected * firstFinalSpeed.GetLength() * Constant::CollideForceRatio );
-
-        while ( IsCollide( firstChr, secondChr ) )
-        {
-            firstChr.SetLocation( firstChr.GetLocation() + firstReflected * 0.1f );
-            secondChr.SetLocation( secondChr.GetLocation() + secondReflected * 0.1f );
-        }
+        ResolveCollision( firstChr, secondChr, deltaTime, penetration);
         return true;
     }
 
     firstChr.TurnOffColliderFillter( secondChr );
     secondChr.TurnOffColliderFillter( firstChr );
     return false;
+}
+
+//void Game::Room::ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime )
+//{
+//
+//    Vector normal = ( firstChr.GetLocation( ) - secondChr.GetLocation( ) ).Normalized( );
+//    Vector tangent = Vector( normal.y, normal.x, normal.z ).Normalized( );
+//
+//    Vector firstForward = firstChr.GetFinalSpeed( ).Normalized( );
+//    Vector firstReflected = Vector::Reflect( normal, firstForward ).Normalized( );
+//    Vector firstFinalSpeed = firstChr.GetFinalSpeed( );
+//
+//    Vector secondForward = secondChr.GetFinalSpeed( ).Normalized( );
+//    Vector secondReflected = Vector::Reflect( -normal, secondForward ).Normalized( );
+//    Vector secondFinalSpeed = secondChr.GetFinalSpeed( );
+//
+//    Double firstNormalSpeed = Vector::Dot( normal, firstFinalSpeed );
+//    Vector firstTangentVector = tangent * Vector::Dot( tangent, firstFinalSpeed );
+//
+//    Double secondNormalSpeed = Vector::Dot( normal, secondFinalSpeed );
+//    Vector secondTangentVector = tangent * Vector::Dot( tangent, secondFinalSpeed );
+//
+//    Vector newFirstNormalVector = normal * secondNormalSpeed * Constant::CollideForceRatio;
+//    Vector newSecondNormalVector = normal * firstNormalSpeed * Constant::CollideForceRatio;
+//
+//    Vector xAxis = Vector( 1, 0, 0 );
+//    Vector yAxis = Vector( 0, 1, 0 );
+//
+//    Vector newFirstSpeed = xAxis * ( Vector::Dot( xAxis, newFirstNormalVector ) + Vector::Dot( xAxis, firstTangentVector ) )
+//        + yAxis * ( Vector::Dot( yAxis, newFirstNormalVector ) + Vector::Dot( yAxis, firstTangentVector ) );
+//
+//    newFirstSpeed = newFirstSpeed.Normalized( ) * std::min( newFirstSpeed.GetLength( ), Constant::MaxSpeed );
+//
+//    Vector newSecondSpeed = xAxis * ( Vector::Dot( xAxis, newSecondNormalVector ) + Vector::Dot( xAxis, secondTangentVector ) )
+//        + yAxis * ( Vector::Dot( yAxis, newSecondNormalVector ) + Vector::Dot( yAxis, secondTangentVector ) );
+//
+//    newSecondSpeed = newSecondSpeed.Normalized( ) * std::min( newSecondSpeed.GetLength( ), Constant::MaxSpeed );
+//
+//    int outOfBound = 0;
+
+//    std::cout << "OutOfBound : " << outOfBound << std::endl;
+//    //Vector newFirstSpeed = firstReflected * std::min( secondFinalSpeed.GetLength( ) * Constant::CollideForceRatio, Constant::MaxSpeed );
+//    //Vector newSecondSpeed = secondReflected * std::min( firstFinalSpeed.GetLength( ) * Constant::CollideForceRatio, Constant::MaxSpeed );
+//
+//    firstChr.SetSpeed( newFirstSpeed );
+//    secondChr.SetSpeed( newSecondSpeed );
+//}
+
+
+
+void Game::Room::ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime, Double penetration )
+{
+    auto& a = firstChr;
+    auto& b = secondChr;
+    auto rv = a.GetFinalSpeed() - b.GetFinalSpeed();
+    auto normal = (a.GetLocation() - b.GetLocation()).Normalized();
+
+
+    firstChr.SetLocation( firstChr.GetLocation( ) - normal * penetration * 0.4f);
+    secondChr.SetLocation( secondChr.GetLocation( ) + normal * penetration * 0.4f );
+
+    Double velAlongNormal = Vector::Dot( rv, normal );
+    if( velAlongNormal > 0 ) return;
+
+    Double e = Constant::CollideForceRatio; // 탄성 계수
+    Double j = -( 1 + e ) * velAlongNormal;
+
+    Double Mass = 1.0;
+    j /= 1 / Mass + 1 / Mass;
+    auto impulse =  normal * j;
+    Vector aNewSpeed = ( impulse / Mass );
+    a.AddSpeed( aNewSpeed );
+    Vector bNewSpeed = -( impulse / Mass );
+    b.AddSpeed( bNewSpeed );
+    printf("Collision by A[%lf,%lf,%lf] / B[%lf,%lf,%lf] / penetraion : %lf\n", 
+        aNewSpeed.x,
+        aNewSpeed.y,
+        aNewSpeed.z,
+        bNewSpeed.x,
+        bNewSpeed.y,
+        bNewSpeed.z,
+        penetration
+        );
 }
 
 
@@ -185,7 +253,7 @@ void Game::Room::CheckCollision( Double deltaTime )
         {
             PlayerCharacter& secondChr = characters[ second ];
             PlayerController& secondCon = players[ second ];
-            bool isCollide = CheckCollisionTwoPlayer( firstChr, secondChr );
+            bool isCollide = CheckCollisionTwoPlayer( firstChr, secondChr, deltaTime );
             if ( isCollide )
             {
                 firstCon.OnCollided( secondCon );
@@ -202,10 +270,11 @@ void Game::Room::CheckCollision( Double deltaTime )
 }
 
 
-bool Game::Room::IsCollide( PlayerCharacter& firstChr, PlayerCharacter& secondChr )
+bool Game::Room::IsCollide( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double& resultPenetration )
 {
     Double dist = Vector::Distance( firstChr.GetLocation(), secondChr.GetLocation() );
     Double sumRadius = firstChr.GetRadius() + secondChr.GetRadius();
+    resultPenetration = sumRadius - dist;
     return sumRadius > dist;
 }
 
@@ -223,7 +292,7 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 void Game::Room::BroadcastStartGame()
 {
     Packet::Server::StartGame packet;
-    packet.GameTime = std::chrono::duration_cast< std::chrono::seconds >( Constant::TotalGameTime ).count();
+    packet.GameTime = static_cast<Int32>( Constant::TotalGameTime );
     BroadcastPacket( &packet );
 }
 

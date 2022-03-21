@@ -12,6 +12,7 @@
 #include "Game/PlayerCharacter.h"
 #include "Define/DataTypes.h"
 #include "Define/MapData.h"
+#include <cassert>
 #include <iostream>
 
 
@@ -122,7 +123,7 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetForward( const Vector& forward 
 void Game::PlayerCharacter::Update( Double deltaTime )
 {
     location += GetFinalSpeed() * deltaTime;
-
+    assert( location.IsNan() == false );
     // ¸¶Âû·Â
     if ( !speed.IsZero() )
     {

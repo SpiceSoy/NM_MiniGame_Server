@@ -33,6 +33,7 @@
     <ClInclude Include="Network\UtillFuntions.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Define\MapData.cpp" />
     <ClCompile Include="Game\LambdaFSM.cpp" />
     <ClCompile Include="Game\Room.cpp" />
     <ClCompile Include="Game\PlayerCharacter.cpp" />

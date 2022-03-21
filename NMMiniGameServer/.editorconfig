@@ -46,6 +46,7 @@ resharper_cpp_indent_method_decl_pars = outside_and_inside
 resharper_cpp_int_align_comments = true
 resharper_cpp_int_align_fix_in_adjacent = false
 resharper_cpp_keep_user_linebreaks = false
+resharper_cpp_max_line_length = 200
 resharper_cpp_outdent_commas = true
 resharper_cpp_outdent_dots = true
 resharper_cpp_space_before_colon_in_case = true
@@ -57,7 +58,6 @@ resharper_cpp_space_between_typecast_parentheses = true
 resharper_cpp_space_within_parentheses = true
 resharper_cpp_use_indent_from_vs = false
 resharper_cpp_wrap_arguments_style = chop_if_long
-resharper_cpp_wrap_before_invocation_rpar = true
 resharper_disable_space_changes_before_trailing_comment = true
 resharper_function_declaration_return_type_style = on_single_line
 resharper_function_definition_return_type_style = on_single_line
@@ -77,6 +77,7 @@ resharper_space_within_template_params = true
 resharper_toplevel_function_declaration_return_type_style = on_single_line
 resharper_toplevel_function_definition_return_type_style = on_single_line
 resharper_use_continuous_line_indent_in_method_pars = true
+resharper_wrap_braced_init_list_style = chop_if_long
 
 # ReSharper inspection severities
 resharper_arrange_redundant_parentheses_highlighting = hint

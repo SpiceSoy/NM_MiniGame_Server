@@ -88,5 +88,8 @@
     <ClCompile Include="Game\Timer.cpp">
       <Filter>소스 파일\Game</Filter>
     </ClCompile>
+    <ClCompile Include="Define\MapData.cpp">
+      <Filter>소스 파일\Define</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

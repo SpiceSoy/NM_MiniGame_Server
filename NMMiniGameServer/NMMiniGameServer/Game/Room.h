@@ -59,7 +59,8 @@ namespace Game
 
         void BroadcastByte( const Byte* data, UInt32 size );
         void BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex );
-        bool CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr );
+        bool CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime );
+        void ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime, Double penetration );
         Vector GetSpawnLocation( UInt32 index ) const;
         Vector GetSpawnForward( UInt32 index ) const;
         ERoomState GetState() const;
@@ -69,7 +70,7 @@ namespace Game
     private:
         void CheckCollision( Double deltaTime );
 
-        bool IsCollide( PlayerCharacter& firstChr, PlayerCharacter& secondChr );
+        bool IsCollide( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double& resultPenetration );
 
         void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser );
         void BroadcastStartGame();

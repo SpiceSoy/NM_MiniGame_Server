@@ -12,48 +12,53 @@
 #pragma once
 #include "Define/DataTypes.h"
 #include <chrono>
+#include <string>
 
 using TimeSecond = std::chrono::duration< double >;
+
 
 namespace Constant
 {
     using namespace std::chrono_literals;
     // Server
-    constexpr UInt32 TickTerm = 1000 / 60;
-    constexpr UInt32 MaxUserCount = 2;
+    extern Int32 TickTerm;
+    extern Int32 MaxUserCount;
     // Map
-    constexpr Double MapSize = 1300;
-    constexpr Double SpawnPointRatio = 0.75;
+    extern Double MapSize;
+    extern Double SpawnPointRatio;
 
     // Character
-    constexpr Double CharacterRadius = 100.0;
-    constexpr Double CharacterWeight = 10.0;
-    constexpr Double CharacterSpring = 1.0;
-    constexpr Double CharacterDefaultSpeed = 600.0;
-    constexpr Double CharacterRotateSpeed = 360.0;
-    constexpr Double CharacterRushSpeed = 1000.0;
-    constexpr Double CharacterFriction = 1000.0;
-    constexpr Double CharacterMapOutSpeed = 300.0;
-    constexpr Double DefaultHeight = -84.787506;
-    constexpr Double RespawnHeight = -84.787506;
-    constexpr Double CollideForceRatio = 2.0;
+    //Double CharacterRadius = 100.0;
+    extern Double CharacterRadius;
+    extern Double CharacterWeight;
+    extern Double CharacterSpring;
+    extern Double CharacterDefaultSpeed;
+    extern Double CharacterRotateSpeed;
+    extern Double CharacterRushSpeed;
+    extern Double CharacterFriction;
+    extern Double CharacterMapOutSpeed;
+    extern Double DefaultHeight;
+    extern Double RespawnHeight;
+    extern Double CollideForceRatio;
+    extern Double MaxSpeed;
 
     // Game
-    constexpr Int32 MaxRushCount = 3;
+    extern Int32 MaxRushCount;
 
     //Score 점수 판정 무조건 합산
-    constexpr Int32 KillerScore = 1; 
-    constexpr Int32 DieScore = -1;
-    constexpr Int32 SelfDieScore = DieScore;
+    extern Int32 KillerScore;
+    extern Int32 DieScore;
+    extern Int32 SelfDieScore;
 
     // Timer
-    constexpr TimeSecond RushCountRegenTime = 7.0s;
-    constexpr TimeSecond RespawnTime = 1.5s;
-    constexpr TimeSecond FirstWaitTime = 1.5s;
-    constexpr TimeSecond TotalGameTime = 15s;
-    constexpr TimeSecond RushMinimumRecastTime = 1s;
-    constexpr TimeSecond KillerJudgeTime = 1s; // 공격 판정 남는 시간
-
+    extern Double RushCountRegenTime;
+    extern Double RespawnTime;
+    extern Double FirstWaitTime;
+    extern Double TotalGameTime;
+    extern Double RushMinimumRecastTime;
+    extern Double KillerJudgeTime;
     // Null
     constexpr Int32 NullPlayerIndex = -1;
+
+    bool LoadMapData( const std::string& mapDir );
 };

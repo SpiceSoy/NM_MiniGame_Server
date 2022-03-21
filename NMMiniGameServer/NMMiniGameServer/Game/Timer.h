@@ -43,6 +43,11 @@ namespace Game
             return *this;
         }
 
+        Timer& AddSeconds( Double seconds )
+        {
+            point = point + std::chrono::duration<Double>(seconds);
+            return *this;
+        }
 
         template < typename DurationType >
         bool IsOver( const DurationType& duration ) const
@@ -51,6 +56,11 @@ namespace Game
             return newTime < Now().point;
         }
 
+        bool IsOverSeconds( Double seconds ) const
+        {
+            auto newTime = point + std::chrono::duration<Double>( seconds );
+            return newTime < Now( ).point;
+        }
 
         bool IsOverNow() const 
         {

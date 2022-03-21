@@ -151,9 +151,9 @@ void Game::PlayerController::ChangeState( EPlayerState state )
 
 void Game::PlayerController::UseRush()
 {
-    timerRushUse.SetNow().Add( Constant::RushMinimumRecastTime );
+    timerRushUse.SetNow().AddSeconds( Constant::RushMinimumRecastTime );
     rushQueue.pop_front();
-    rushQueue.emplace_back( Timer::Now().Add( Constant::RushCountRegenTime ) );
+    rushQueue.emplace_back( Timer::Now().AddSeconds( Constant::RushCountRegenTime ) );
     character->AddSpeed( character->GetForward() * Constant::CharacterRushSpeed );
     rushCount -= 1;
     SendRushCountChangedPacket();
@@ -190,14 +190,7 @@ void Game::PlayerController::LogLine( const char* format, ... ) const
     time( &c );
     tm t;
     localtime_s( &t, &c );
-    printf( "[%02d:%02d:%02d] P%d[%02d:%s] : ",
-           t.tm_hour,
-           t.tm_min,
-           t.tm_sec,
-           playerIndex,
-           static_cast< Int32 >( fsm.GetState() ),
-           to_string( fsm.GetState() )
-          );
+    printf( "[%02d:%02d:%02d] P%d[%02d:%s] : ", t.tm_hour, t.tm_min, t.tm_sec, playerIndex, static_cast< Int32 >( fsm.GetState() ), to_string( fsm.GetState() ) );
     va_list va;
     va_start( va, format );
     vprintf_s( format, va );
@@ -235,7 +228,7 @@ void Game::PlayerController::OnCollided( const PlayerController& other )
 
 Int32 Game::PlayerController::GetLastCollidedPlayerIndex() const
 {
-    if ( timerLastCollided.IsOver( Constant::KillerJudgeTime ) ) return Constant::NullPlayerIndex;
+    if ( timerLastCollided.IsOverSeconds( Constant::KillerJudgeTime ) ) return Constant::NullPlayerIndex;
     else return lastCollidedPlayerIndex;
 }
 
@@ -273,13 +266,11 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnEnter( EPlayerState::Spawn,
                                 [this]( EPlayerState prevState ) -> StateFuncResult< EPlayerState >
                                 {
-                                    LogLine( "Entered" );
+                                    //LogLine( "Entered" );
                                     this->SendStateChangedPacket();
                                     this->character->SetMoveSpeed( 0 );
-                                    TimeSecond waitTime = prevState == EPlayerState::Die
-                                                              ? Constant::RespawnTime
-                                                              : Constant::FirstWaitTime;
-                                    this->timerSpawnStart.SetNow().Add( waitTime );
+                                    Double waitTime = prevState == EPlayerState::Die ? Constant::RespawnTime : Constant::FirstWaitTime;
+                                    this->timerSpawnStart.SetNow().AddSeconds( waitTime );
                                     return StateFuncResult< EPlayerState >::NoChange();
                                 }
                                );
@@ -299,7 +290,12 @@ void Game::PlayerController::AddStateFunctions()
 
     #pragma region Idle
     fsm.AddStateFunctionOnEnter( EPlayerState::Idle, defaultEnter );
-    fsm.AddStateFunctionOnUpdate( EPlayerState::Idle, defaultUpdate );
+    fsm.AddStateFunctionOnUpdate( EPlayerState::Idle,
+                                 [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
+                                 {
+                                        return StateFuncResult< EPlayerState >( EPlayerState::Run );
+                                 }
+                                );
     fsm.AddStateFunctionOnReceiveInput( EPlayerState::Idle,
                                        []( const Packet::Client::Input& input ) -> StateFuncResult< EPlayerState >
                                        {
@@ -325,7 +321,7 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnEnter( EPlayerState::Run,
                                 [this]( EPlayerState prevState ) -> StateFuncResult< EPlayerState >
                                 {
-                                    LogLine( "Entered" );
+                                    //LogLine( "Entered" );
                                     this->SendStateChangedPacket();
                                     this->character->SetMoveSpeed( Constant::CharacterDefaultSpeed );
                                     return StateFuncResult< EPlayerState >::NoChange();
@@ -357,7 +353,7 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnEnter( EPlayerState::RotateLeft,
                                 [this]( EPlayerState prevState ) -> StateFuncResult< EPlayerState >
                                 {
-                                    LogLine( "Entered" );
+                                    //LogLine( "Entered" );
                                     this->SendStateChangedPacket( EPlayerState::Rotate );
                                     this->character->SetMoveSpeed( 0 );
                                     return StateFuncResult< EPlayerState >::NoChange();
@@ -395,7 +391,7 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnEnter( EPlayerState::RotateRight,
                                 [this]( EPlayerState prevState ) -> StateFuncResult< EPlayerState >
                                 {
-                                    LogLine( "Entered" );
+                                    //LogLine( "Entered" );
                                     this->SendStateChangedPacket( EPlayerState::Rotate );
                                     this->character->SetMoveSpeed( 0 );
                                     return StateFuncResult< EPlayerState >::NoChange();
@@ -433,15 +429,15 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnEnter( EPlayerState::Rush,
                                 [this]( EPlayerState prevState ) -> StateFuncResult< EPlayerState >
                                 {
-                                    LogLine( "Rush Try" );
+                                    //LogLine( "Rush Try" );
                                     if ( this->CanRush() )
                                     {
-                                        LogLine( "Entered" );
+                                        //LogLine( "Entered" );
                                         this->SendStateChangedPacket( EPlayerState::Rush );
                                         this->UseRush();
                                         return StateFuncResult< EPlayerState >::NoChange();
                                     }
-                                    LogLine( "Failed" );
+                                    //LogLine( "Failed" );
                                     return StateFuncResult< EPlayerState >( prevState );
                                     return StateFuncResult< EPlayerState >::NoChange();
                                 }
@@ -475,8 +471,9 @@ void Game::PlayerController::AddStateFunctions()
                                 {
                                     LogLine( "Entered" );
                                     timerRespawnStart.SetNow();
-                                    Vector outVector = -character->GetLocation().Normalized();
+                                    Vector outVector = character->GetLocation().Normalized();
                                     this->SendStateChangedPacket( EPlayerState::Die );
+                                    character->SetMoveSpeed( 0 );
                                     character->SetSpeed( outVector * Constant::CharacterMapOutSpeed );
                                     return StateFuncResult< EPlayerState >::NoChange();
                                 }
@@ -484,10 +481,11 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnUpdate( EPlayerState::Die,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
-                                     if ( timerRespawnStart.IsOver( Constant::RespawnTime ) )
+                                     if ( timerRespawnStart.IsOverSeconds( Constant::RespawnTime ) )
                                      {
                                          character->SetLocation( room->GetSpawnLocation( playerIndex ) );
-                                         character->SetSpeed( Vector::Zero() );
+                                         character->SetForward( room->GetSpawnForward( playerIndex ) );
+                                         //character->SetSpeed( Vector::Zero() );
                                          BroadcastObjectLocation( true );
                                          return StateFuncResult< EPlayerState >( EPlayerState::Spawn );
                                      }

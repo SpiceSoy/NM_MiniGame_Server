@@ -11,6 +11,7 @@
 
 #pragma once
 #include "Define/DataTypes.h"
+#include <cassert>
 #include <type_traits>
 #include <math.h>
 
@@ -105,12 +106,14 @@ namespace Game
 
         Vector operator/( Vector v ) const
         {
+            assert( v.IsZero( ) == false );
             return Vector( x / v.x, y / v.y, z / v.z );
         }
 
 
         Vector& operator/=( Vector v )
         {
+            assert( v.IsZero( ) == false );
             *this = *this / v;
             return *this;
         }
@@ -136,7 +139,9 @@ namespace Game
 
         Vector Normalized() const
         {
-            return *this / GetLength();
+            auto length = GetLength();
+            if(length == 0) return Vector::Zero();
+            else return *this / length;
         }
 
 
@@ -176,6 +181,15 @@ namespace Game
             return x == 0 && y == 0 && z == 0;
         }
 
+        bool IsNan() const
+        {
+            return isnan( x ) || isnan( y ) || isnan( z );
+        }
+
+        bool IsInf( ) const
+        {
+            return isinf( x ) || isinf( y ) || isinf( z );
+        }
 
         static Vector Zero()
         {
@@ -194,6 +208,11 @@ namespace Game
             const Vector& P = vector;
             const Vector& n = normal;
             return P + n * 2 * ( -P * n );
+        }
+
+        static NumType Dot( const Vector& a, const Vector& b )
+        {
+            return a.x * b.x + a.y * b.y + a.z * b.z;
         }
     };
 };

@@ -25,6 +25,13 @@
 #pragma comment(lib, "ws2_32.lib")
 
 
+Network::ReadyMatch::ReadyMatch()
+{
+    userReadys.resize( Constant::MaxUserCount );
+    users.resize( Constant::MaxUserCount );
+}
+
+
 Network::Server::Server()
 {
 }
@@ -37,6 +44,7 @@ Network::Server::~Server()
 
 Void Network::Server::Initialize( UInt16 Port )
 {
+    Constant::LoadMapData( "map.txt" );
     listenPort = Port;
     InitializeSocket();
     CreateListenSocket();
