@@ -47,12 +47,6 @@ Game::Room::Room( Int32 userCount )
     scores.resize( userCount );
 }
 
-
-Game::Room::~Room()
-{
-}
-
-
 Game::PlayerController* Game::Room::GetNewPlayerController( Int32 index, Network::Session* session )
 {
     auto& instance = players[ index ];
@@ -68,9 +62,9 @@ Game::PlayerController* Game::Room::GetNewPlayerController( Int32 index, Network
 }
 
 
-void Game::Room::AddSession( Int32 index, Network::Session* session)
+void Game::Room::AddSession( Int32 index, Network::Session* session )
 {
-    sessions[index] = session;
+    sessions[ index ] = session;
     session->SetRoom( this );
     session->SetController( GetNewPlayerController( index, session ) );
 }
@@ -78,6 +72,7 @@ void Game::Room::AddSession( Int32 index, Network::Session* session)
 
 void Game::Room::Update( Double deltaTime )
 {
+    if ( state == ERoomState::End ) return;
     for ( PlayerController& player : players )
     {
         player.Update( deltaTime );
@@ -103,7 +98,7 @@ void Game::Room::Update( Double deltaTime )
         SetState( ERoomState::End );
         LogLine( "End of Game" );
         BroadcastEndGame();
-        for( Network::Session* i : sessions )
+        for ( Network::Session* i : sessions )
         {
             i->ClearRoomData();
         }

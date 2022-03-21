@@ -107,16 +107,21 @@ void Network::Server::PostReadyMatch( Session* requester )
                           );
     if ( it != readyMatches.end() )
     {
-        Int32 index = std::distance( it->users.begin( ), std::find( it->users.begin( ), it->users.end( ), requester ) );
-        it->userReadys[index] = true;
-        if( std::all_of( it->userReadys.begin( ), it->userReadys.end( ), [] ( bool rdy ) {return rdy; } ) )
+        Int32 index = std::distance( it->users.begin(), std::find( it->users.begin(), it->users.end(), requester ) );
+        it->userReadys[ index ] = true;
+        if ( std::all_of( it->userReadys.begin(),
+                         it->userReadys.end(),
+                         []( bool rdy )
+                         {
+                             return rdy;
+                         }
+                        ) )
         {
-   
             auto& room = AddNewRoom( Constant::MaxUserCount );
             std::cout << "Queuing Request Matches\n";
             for ( Int32 i = 0; i < Constant::MaxUserCount; i++ )
             {
-                room.AddSession( i, it->users[i] );
+                room.AddSession( i, it->users[ i ] );
             }
             room.ReadyToGame();
             readyMatches.erase( it );
@@ -150,7 +155,7 @@ void Network::Server::PostCancelReadyMatch( Session* requester )
             std::cout << "Add Request " << std::endl;
         }
     }
-    std::cout <<"Cancel Match Ready " << requester << std::endl;
+    std::cout << "Cancel Match Ready " << requester << std::endl;
     readyMatches.erase( it );
     Packet::Server::MatchCanceled packet;
     requester->SendPacket( &packet );
@@ -287,14 +292,29 @@ void Network::Server::Select()
 
 void Network::Server::RemoveExpiredSession()
 {
-    auto it = std::remove_if( sessions.begin(),
-                             sessions.end(),
-                             []( Session& session )
-                             {
-                                 return session.IsClosed();
-                             }
-                            );
-    sessions.erase( it, sessions.end() );
+    //auto it = std::remove_if( sessions.begin(),
+    //                         sessions.end(),
+    //                         []( Session& session )
+    //                         {
+    //                             return session.IsClosed();
+    //                         }
+    //                        );
+    //sessions.erase( it, sessions.end() );
+    sessions.remove_if( []( Session& session )
+                       {
+                           return session.IsClosed();
+                       }
+                      );
+}
+
+
+void Network::Server::RemoveExpiredRoom()
+{
+    rooms.remove_if( []( const Game::Room& room )
+                    {
+                        return room.GetState() == Game::ERoomState::End;
+                    }
+                   );
 }
 
 
@@ -321,7 +341,7 @@ void Network::Server::QueuingMatch()
                 RequestMatch& request = matchQueue.front();
                 packet.playerIndex = i;
                 readyMatch.users[ i ] = request.requester;
-                readyMatch.userReadys[i] = false;
+                readyMatch.userReadys[ i ] = false;
                 request.requester->SendPacket( &packet );
                 matchQueue.pop_front();
             }
@@ -333,7 +353,7 @@ void Network::Server::QueuingMatch()
             Int32 remainUser = matchQueue.size();
             for ( RequestMatch& req : matchQueue )
             {
-                std::cout << "SendMatchPacket To " << req.requester  << std::endl;
+                std::cout << "SendMatchPacket To " << req.requester << std::endl;
                 Packet::Server::ChangeMatchingInfo packet;
                 packet.currentUser = remainUser;
                 packet.maxUser = Constant::MaxUserCount;

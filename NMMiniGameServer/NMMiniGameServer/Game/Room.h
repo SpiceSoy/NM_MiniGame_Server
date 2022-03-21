@@ -45,7 +45,7 @@ namespace Game
         ERoomState state;
     public:
         Room( Int32 userCount );
-        ~Room();
+        ~Room() = default;
         void AddSession( Int32 index, Network::Session* session );
         void Update( Double deltaTime );
 

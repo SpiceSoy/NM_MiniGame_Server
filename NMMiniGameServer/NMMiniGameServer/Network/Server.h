@@ -69,6 +69,7 @@ namespace Network
         void StartListen();
         void Select();
         void RemoveExpiredSession();
+        void RemoveExpiredRoom( );
         Session& AddNewSession( SocketHandle socket );
         void QueuingMatch();
         void UpdateRooms( Double deltaTime );
