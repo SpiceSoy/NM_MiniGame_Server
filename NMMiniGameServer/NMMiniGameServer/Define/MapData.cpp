@@ -39,7 +39,7 @@ namespace Constant
 
     // Character
     Double CharacterRadius = 150.0; // 캐릭터 충돌 판정 크기
-    Double CharacterWeight = 10.0; // 캐릭터 무게
+    Double CharacterWeight = 1.0; // 캐릭터 무게
     Double CharacterDefaultSpeed = 600.0; // 캐릭터 기본 이동 속도
     Double CharacterRotateSpeed = 360.0; // 캐릭터 기본 회전 속도 (각 / 라디안 아님)
     Double CharacterRushSpeed = 1000.0; // 러쉬 누를 때 이동할 속도

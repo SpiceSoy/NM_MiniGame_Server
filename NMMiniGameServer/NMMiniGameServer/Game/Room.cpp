@@ -224,7 +224,7 @@ void Game::Room::ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& s
     Double e = Constant::CharacterElasticity; // Åº¼º °è¼ö
     Double j = -( 1 + e ) * velAlongNormal;
 
-    Double Mass = 1.0;
+    Double Mass = Constant::CharacterWeight;
     j /= 1 / Mass + 1 / Mass;
     auto impulse =  normal * j;
     Vector aNewSpeed = ( impulse / Mass );
