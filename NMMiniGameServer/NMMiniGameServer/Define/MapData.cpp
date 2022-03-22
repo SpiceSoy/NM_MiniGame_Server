@@ -47,7 +47,7 @@ namespace Constant
     Double CharacterMapOutSpeed = 300.0; // 맵 밖으로 나갈 시 더해줄 속도
     Double CharacterElasticity = 1; // 캐릭터 충돌 시 탄성 계수
     Double CharacterMaxSpeed = 2000.0; // 캐릭터 최대 속도 (아직 미사용)
-    Int32 CharacterMaxRushCount = 3; // 캐릭터 러시 스택 최대치
+    Int32  CharacterMaxRushCount = 3; // 캐릭터 러시 스택 최대치
     Double CharacterRushCountRegenSeconds = 7.0; // 스택 리젠 시간 / 현재 사용시 쿨타임 리셋 안됨 -> 추후 개선 예정
     Double CharacterRespawnSeconds = 1.5; // 사망 판정 이후 리스폰까지 걸릴 시간 (사망 판정(맵 밖으로 나감) <->
 
@@ -151,16 +151,7 @@ bool Constant::LoadMapData( const std::string& mapDir )
     if ( mapFile.fail() )
     {
         std::cout << "맵 파일 경로[" << mapDir << "]를 찾을 수 없습니다. 기본 변수로 서버가 시작됩니다." << std::endl;
-
-        ofstream newMapFile(mapDir);
-        for( auto& i : variableMaps )
-        {
-            auto token = i.first;
-            float value = TokenOutValue(token);
-            newMapFile << token << " = " << value << std::endl;
-        }
         mapFile.close();
-        newMapFile.close();
         return false;
     }
     //string fileString = { istreambuf_iterator<char>( mapFile ), istreambuf_iterator<char>( ) };
@@ -177,4 +168,16 @@ bool Constant::LoadMapData( const std::string& mapDir )
         std::cout << "Parsing : " << token << " = " << value << std::endl;
         TokenReadValue( token, value );
     }
+}
+
+void Constant::SaveMapData( const std::string& mapDir )
+{
+    ofstream newMapFile( mapDir );
+    for( auto& i : variableMaps )
+    {
+        auto token = i.first;
+        float value = TokenOutValue( token );
+        newMapFile << token << " = " << value << std::endl;
+    }
+    newMapFile.close( );
 }

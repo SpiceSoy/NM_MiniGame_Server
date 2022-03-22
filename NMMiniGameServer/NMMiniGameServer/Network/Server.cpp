@@ -45,6 +45,7 @@ Network::Server::~Server()
 Void Network::Server::Initialize( UInt16 Port )
 {
     Constant::LoadMapData( "map.txt" );
+    Constant::SaveMapData( "map.txt" );
     listenPort = Port;
     InitializeSocket();
     CreateListenSocket();

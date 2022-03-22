@@ -23,12 +23,17 @@ namespace Constant
     // Server
     extern Int32 TickTerm;
     extern Int32 MaxUserCount;
+
+    extern Double GameFirstWaitSeconds;
+    extern Double GameTotalTimeSeconds;
+
     // Map
     extern Double MapSize;
     extern Double MapSpawnPointRatio;
+    extern Double MapCharacterDefaultHeight;
+    extern Double MapSpawnRespawnHeight;
 
     // Character
-    //Double CharacterRadius = 100.0;
     extern Double CharacterRadius;
     extern Double CharacterWeight;
     extern Double CharacterDefaultSpeed;
@@ -36,28 +41,21 @@ namespace Constant
     extern Double CharacterRushSpeed;
     extern Double CharacterFriction;
     extern Double CharacterMapOutSpeed;
-    extern Double MapCharacterDefaultHeight;
-    extern Double MapSpawnRespawnHeight;
     extern Double CharacterElasticity;
     extern Double CharacterMaxSpeed;
-
-    // Game
     extern Int32 CharacterMaxRushCount;
+    extern Double CharacterRushCountRegenSeconds;
+    extern Double CharacterRespawnSeconds;
+    extern Double CharacterRushMinimumRecastSeconds;
 
     //Score 점수 판정 무조건 합산
     extern Int32 ScoreKillPlayer;
     extern Int32 ScoreDiePlayer;
     extern Int32 ScoreSelfDiePlayer;
-
-    // Timer
-    extern Double CharacterRushCountRegenSeconds;
-    extern Double CharacterRespawnSeconds;
-    extern Double GameFirstWaitSeconds;
-    extern Double GameTotalTimeSeconds;
-    extern Double CharacterRushMinimumRecastSeconds;
     extern Double ScoreKillerJudgeTime;
-    // Null
+
     constexpr Int32 NullPlayerIndex = -1;
 
     bool LoadMapData( const std::string& mapDir );
+    void SaveMapData( const std::string& mapDir );
 };
