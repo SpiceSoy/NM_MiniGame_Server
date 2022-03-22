@@ -94,7 +94,7 @@ void Game::Room::Update( Double deltaTime )
         BroadcastStartGame();
     }
     // ³¡³µ´Â°¡?
-    if ( state == ERoomState::Doing && startTime.IsOverSeconds( Constant::TotalGameTime ) )
+    if ( state == ERoomState::Doing && startTime.IsOverSeconds( Constant::GameTotalTimeSeconds ) )
     {
         SetState( ERoomState::End );
         LogLine( "End of Game" );
@@ -123,7 +123,7 @@ void Game::Room::ReadyToGame()
     }
     SetState( ERoomState::Waited );
     LogLine( "Ready of Game" );
-    startTime.SetNow().AddSeconds( Constant::FirstWaitTime );
+    startTime.SetNow().AddSeconds( Constant::GameFirstWaitSeconds );
 }
 
 
@@ -179,8 +179,8 @@ bool Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerChara
 //    Double secondNormalSpeed = Vector::Dot( normal, secondFinalSpeed );
 //    Vector secondTangentVector = tangent * Vector::Dot( tangent, secondFinalSpeed );
 //
-//    Vector newFirstNormalVector = normal * secondNormalSpeed * Constant::CollideForceRatio;
-//    Vector newSecondNormalVector = normal * firstNormalSpeed * Constant::CollideForceRatio;
+//    Vector newFirstNormalVector = normal * secondNormalSpeed * Constant::CharacterElasticity;
+//    Vector newSecondNormalVector = normal * firstNormalSpeed * Constant::CharacterElasticity;
 //
 //    Vector xAxis = Vector( 1, 0, 0 );
 //    Vector yAxis = Vector( 0, 1, 0 );
@@ -188,18 +188,18 @@ bool Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerChara
 //    Vector newFirstSpeed = xAxis * ( Vector::Dot( xAxis, newFirstNormalVector ) + Vector::Dot( xAxis, firstTangentVector ) )
 //        + yAxis * ( Vector::Dot( yAxis, newFirstNormalVector ) + Vector::Dot( yAxis, firstTangentVector ) );
 //
-//    newFirstSpeed = newFirstSpeed.Normalized( ) * std::min( newFirstSpeed.GetLength( ), Constant::MaxSpeed );
+//    newFirstSpeed = newFirstSpeed.Normalized( ) * std::min( newFirstSpeed.GetLength( ), Constant::CharacterMaxSpeed );
 //
 //    Vector newSecondSpeed = xAxis * ( Vector::Dot( xAxis, newSecondNormalVector ) + Vector::Dot( xAxis, secondTangentVector ) )
 //        + yAxis * ( Vector::Dot( yAxis, newSecondNormalVector ) + Vector::Dot( yAxis, secondTangentVector ) );
 //
-//    newSecondSpeed = newSecondSpeed.Normalized( ) * std::min( newSecondSpeed.GetLength( ), Constant::MaxSpeed );
+//    newSecondSpeed = newSecondSpeed.Normalized( ) * std::min( newSecondSpeed.GetLength( ), Constant::CharacterMaxSpeed );
 //
 //    int outOfBound = 0;
 
 //    std::cout << "OutOfBound : " << outOfBound << std::endl;
-//    //Vector newFirstSpeed = firstReflected * std::min( secondFinalSpeed.GetLength( ) * Constant::CollideForceRatio, Constant::MaxSpeed );
-//    //Vector newSecondSpeed = secondReflected * std::min( firstFinalSpeed.GetLength( ) * Constant::CollideForceRatio, Constant::MaxSpeed );
+//    //Vector newFirstSpeed = firstReflected * std::min( secondFinalSpeed.GetLength( ) * Constant::CharacterElasticity, Constant::CharacterMaxSpeed );
+//    //Vector newSecondSpeed = secondReflected * std::min( firstFinalSpeed.GetLength( ) * Constant::CharacterElasticity, Constant::CharacterMaxSpeed );
 //
 //    firstChr.SetSpeed( newFirstSpeed );
 //    secondChr.SetSpeed( newSecondSpeed );
@@ -221,7 +221,7 @@ void Game::Room::ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& s
     Double velAlongNormal = Vector::Dot( rv, normal );
     if( velAlongNormal > 0 ) return;
 
-    Double e = Constant::CollideForceRatio; // Åº¼º °è¼ö
+    Double e = Constant::CharacterElasticity; // Åº¼º °è¼ö
     Double j = -( 1 + e ) * velAlongNormal;
 
     Double Mass = 1.0;
@@ -292,7 +292,7 @@ void Game::Room::BroadcastByteInternal( const Byte* data, UInt32 size, PlayerCon
 void Game::Room::BroadcastStartGame()
 {
     Packet::Server::StartGame packet;
-    packet.GameTime = static_cast<Int32>( Constant::TotalGameTime );
+    packet.GameTime = static_cast<Int32>( Constant::GameTotalTimeSeconds );
     BroadcastPacket( &packet );
 }
 
@@ -324,7 +324,7 @@ void Game::Room::LogLine( const char* format, ... ) const
 Game::Vector Game::Room::GetSpawnLocation( UInt32 index ) const
 {
     Double angle = 360.0 * ( static_cast< Double >( index + 1 ) / static_cast< Double >( maxUserCount ) );
-    Double spawnLength = Constant::SpawnPointRatio * Constant::MapSize;
+    Double spawnLength = Constant::MapSpawnPointRatio * Constant::MapSize;
     Vector spawnPoint = Vector( 0.0, -spawnLength, 0.0 ).Rotated2D( angle );
     return spawnPoint;
 }
@@ -364,12 +364,12 @@ void Game::Room::OnDiePlayer( const PlayerController* player )
     Int32 playerIndex = player->GetPlayerIndex();
     Int32 killerIndex = player->GetLastCollidedPlayerIndex();
     bool hasKiller = killerIndex != Constant::NullPlayerIndex;
-    Int32 PlayerScore = hasKiller ? Constant::DieScore : Constant::SelfDieScore;
+    Int32 PlayerScore = hasKiller ? Constant::ScoreDiePlayer : Constant::ScoreSelfDiePlayer;
     scores[ playerIndex ] += PlayerScore;
 
     if ( hasKiller )
     {
-        scores[ killerIndex ] += Constant::KillerScore;
+        scores[ killerIndex ] += Constant::ScoreKillPlayer;
         LogLine( "P[%d] Die By P[%d]", playerIndex, killerIndex );
     }
     else

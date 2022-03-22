@@ -93,7 +93,7 @@ void Game::PlayerController::Initialize()
     fsm.Start( EPlayerState::Spawn );
     timerRushUse.SetNow();
     timerRushGen.SetNow();
-    for ( int i = 0; i < Constant::MaxRushCount; ++i )
+    for ( int i = 0; i < Constant::CharacterMaxRushCount; ++i )
     {
         rushQueue.emplace_back( Timer::Now() );
     }
@@ -113,7 +113,7 @@ void Game::PlayerController::Update( Double deltaTime )
     fsm.Update( deltaTime );
 
     // 러시 개수 체크
-    if ( rushCount < Constant::MaxRushCount )
+    if ( rushCount < Constant::CharacterMaxRushCount )
     {
         auto it = std::next( rushQueue.begin(), rushCount );
         if ( it->IsOverNow() )
@@ -151,9 +151,9 @@ void Game::PlayerController::ChangeState( EPlayerState state )
 
 void Game::PlayerController::UseRush()
 {
-    timerRushUse.SetNow().AddSeconds( Constant::RushMinimumRecastTime );
+    timerRushUse.SetNow().AddSeconds( Constant::CharacterRushMinimumRecastSeconds );
     rushQueue.pop_front();
-    rushQueue.emplace_back( Timer::Now().AddSeconds( Constant::RushCountRegenTime ) );
+    rushQueue.emplace_back( Timer::Now().AddSeconds( Constant::CharacterRushCountRegenSeconds ) );
     character->AddSpeed( character->GetForward() * Constant::CharacterRushSpeed );
     rushCount -= 1;
     SendRushCountChangedPacket();
@@ -208,7 +208,7 @@ void Game::PlayerController::BroadcastObjectLocation( bool isSetHeight ) const
     Vector location = character->GetLocation();
     packet.locationX = location.x;
     packet.locationY = location.y;
-    packet.locationZ = isSetHeight ? Constant::RespawnHeight : Constant::DefaultHeight;
+    packet.locationZ = isSetHeight ? Constant::MapSpawnRespawnHeight : Constant::MapCharacterDefaultHeight;
     //packet.rotation = character.GetRotation();
     Vector forward = character->GetForward();
     packet.forwardX = forward.x;
@@ -228,7 +228,7 @@ void Game::PlayerController::OnCollided( const PlayerController& other )
 
 Int32 Game::PlayerController::GetLastCollidedPlayerIndex() const
 {
-    if ( timerLastCollided.IsOverSeconds( Constant::KillerJudgeTime ) ) return Constant::NullPlayerIndex;
+    if ( timerLastCollided.IsOverSeconds( Constant::ScoreKillerJudgeTime ) ) return Constant::NullPlayerIndex;
     else return lastCollidedPlayerIndex;
 }
 
@@ -269,7 +269,7 @@ void Game::PlayerController::AddStateFunctions()
                                     //LogLine( "Entered" );
                                     this->SendStateChangedPacket();
                                     this->character->SetMoveSpeed( 0 );
-                                    Double waitTime = prevState == EPlayerState::Die ? Constant::RespawnTime : Constant::FirstWaitTime;
+                                    Double waitTime = prevState == EPlayerState::Die ? Constant::CharacterRespawnSeconds : Constant::GameFirstWaitSeconds;
                                     this->timerSpawnStart.SetNow().AddSeconds( waitTime );
                                     return StateFuncResult< EPlayerState >::NoChange();
                                 }
@@ -481,7 +481,7 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnUpdate( EPlayerState::Die,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
-                                     if ( timerRespawnStart.IsOverSeconds( Constant::RespawnTime ) )
+                                     if ( timerRespawnStart.IsOverSeconds( Constant::CharacterRespawnSeconds ) )
                                      {
                                          character->SetLocation( room->GetSpawnLocation( playerIndex ) );
                                          character->SetForward( room->GetSpawnForward( playerIndex ) );
