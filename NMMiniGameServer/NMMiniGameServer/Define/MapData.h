@@ -33,6 +33,13 @@ namespace Constant
     extern Double MapCharacterDefaultHeight;
     extern Double MapSpawnRespawnHeight;
 
+    extern Double MapFirstDisableSeconds;
+    extern Double MapSecondDisableSeconds;
+    extern Double MapFirstDisableSize;
+    extern Double MapSecondDisableSize;
+
+
+
     //
     extern Double ItemRadius;
     extern Double ItemRegenMinSeconds;

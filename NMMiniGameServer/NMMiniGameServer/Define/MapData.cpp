@@ -37,6 +37,11 @@ namespace Constant
     Double MapCharacterDefaultHeight = -84.787506; // 일반적으로 캐릭터 돌아다니는 Z(높이)값
     Double MapSpawnRespawnHeight = -84.787506; // 캐릭터 스폰 시 설정할 Z(높이) 값
 
+    Double MapFirstDisableSeconds = 30;
+    Double MapFirstDisableSize = 950;
+    Double MapSecondDisableSeconds = 60;
+    Double MapSecondDisableSize = 600;
+
     Double ItemRadius = 50;
     Double ItemRegenMinSeconds = 5;
     Double ItemRegenMaxSeconds = 10;
@@ -152,6 +157,11 @@ map< std::string, std::pair< ETypeToken, void* > > variableMaps = {
     AddToken( ETypeToken::Float, ItemCloverSpeed ),
     AddToken( ETypeToken::Float, ItemCloverDurationSeconds ),
     AddToken( ETypeToken::Float, CharacterKingRadius), // 캐릭터 충돌 판정 크기
+    AddToken( ETypeToken::Float, MapFirstDisableSeconds ),
+    AddToken( ETypeToken::Float, MapFirstDisableSize ),
+    AddToken( ETypeToken::Float, MapSecondDisableSeconds ),
+    AddToken( ETypeToken::Float, MapSecondDisableSize ),
+
 };
 
 

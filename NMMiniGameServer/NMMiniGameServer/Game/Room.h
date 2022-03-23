@@ -43,6 +43,7 @@ namespace Game
         ERoomState state;
         Int32 itemIndex = 0;
         Double currentMapSize = 0;
+        Int32 mapPhase = 0;
     public:
         Room( Int32 userCount );
         ~Room() = default;
@@ -77,6 +78,7 @@ namespace Game
         void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser );
         void BroadcastStartGame();
         void BroadcastEndGame();
+        void BroadcastMapSizeChanged( Int32 mapIndex );
         void BroadcastSpawnItem( const Item& item );
         void BroadcastRemoveItem( const Item& item, bool isEaten );
         void LogLine( const char* format, ... ) const;
@@ -90,6 +92,7 @@ namespace Game
         void CheckStateChange();
 
         void UpdateItem( Double deltaTime );
+        void UpdateMap();
 
     };
 

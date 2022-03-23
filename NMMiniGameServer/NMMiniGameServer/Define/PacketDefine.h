@@ -35,6 +35,7 @@ namespace Packet
         ServerMatchCanceled,
         ServerReadyMatching,
         ServerCancelReadyMatching,
+        ServerMapSizeChanged,
 
         ServerItemSpawn,
         ServerItemRemove,
@@ -193,6 +194,12 @@ namespace Packet
             Header header = SERVER_HEADER( BuffRemove );
             Int32 playerIndex;
             Byte buffType;
+        };
+
+        struct MapSizeChanged
+        {
+            Header header = SERVER_HEADER( MapSizeChanged );
+            Int32 mapIndex;
         };
 
     };

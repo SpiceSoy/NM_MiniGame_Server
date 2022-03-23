@@ -122,6 +122,25 @@ void Game::Room::UpdateItem( Double deltaTime )
 }
 
 
+void Game::Room::UpdateMap()
+{
+    if( mapPhase == 0 && startTime.IsOverSeconds( Constant::MapFirstDisableSeconds ) )
+    {
+        LogLine( "MapPhase Changed : %d" , mapPhase );
+        BroadcastMapSizeChanged(mapPhase);
+        currentMapSize = Constant::MapFirstDisableSize;
+        mapPhase = 1;
+    }
+    else if( mapPhase == 1 && startTime.IsOverSeconds( Constant::MapSecondDisableSeconds ))
+    {
+        LogLine( "MapPhase Changed : %d", mapPhase );
+        BroadcastMapSizeChanged( mapPhase );
+        currentMapSize = Constant::MapSecondDisableSize;
+        mapPhase = 2;
+    }
+}
+
+
 void Game::Room::AddSession( Int32 index, Network::Session* session )
 {
     sessions[ index ] = session;
@@ -177,6 +196,7 @@ void Game::Room::CheckStateChange()
 void Game::Room::Update( Double deltaTime )
 {
     if ( state == ERoomState::End ) return;
+    UpdateMap();
     UpdatePlayerController( deltaTime );
     UpdateCharacter( deltaTime );
     CheckCollision( deltaTime );
@@ -285,7 +305,7 @@ void Game::Room::CheckCollision( Double deltaTime )
                 secondCon.OnCollided( firstCon );
             }
         }
-        bool isOutOfMap = firstChr.GetLocation().GetLength() > Constant::MapSize;
+        bool isOutOfMap = firstChr.GetLocation().GetLength() > currentMapSize;
         if ( isOutOfMap && firstCon.GetState() != EPlayerState::Die )
         {
             firstCon.ChangeState( EPlayerState::Die );
@@ -339,6 +359,14 @@ void Game::Room::BroadcastEndGame()
 }
 
 
+void Game::Room::BroadcastMapSizeChanged( Int32 mapIndex )
+{
+    Packet::Server::MapSizeChanged packet;
+    packet.mapIndex = mapIndex;
+    BroadcastPacket( &packet );
+}
+
+
 void Game::Room::BroadcastSpawnItem( const Item& item )
 {
     Packet::Server::ItemSpawn packet;
@@ -379,7 +407,7 @@ void Game::Room::LogLine( const char* format, ... ) const
 Game::Vector Game::Room::GetSpawnLocation( UInt32 index ) const
 {
     Double angle = 360.0 * ( static_cast< Double >( index + 1 ) / static_cast< Double >( maxUserCount ) );
-    Double spawnLength = Constant::MapSpawnPointRatio * Constant::MapSize;
+    Double spawnLength = Constant::MapSpawnPointRatio * currentMapSize;
     Vector spawnPoint = Vector( 0.0, -spawnLength, 0.0 ).Rotated2D( angle );
     return spawnPoint;
 }
