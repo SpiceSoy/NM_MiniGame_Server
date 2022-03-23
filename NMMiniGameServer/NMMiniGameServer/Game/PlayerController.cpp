@@ -571,12 +571,42 @@ void Game::PlayerController::AddStateFunctions()
     #pragma endregion
 
     #pragma region Hit
+    fsm.AddStateFunctionOnEnter( EPlayerState::Hit,
+        [this] ( EPlayerState prevState ) -> StateFuncResult< EPlayerState >
+        {
+            LogLine( "Entered" );
+            this->SendStateChangedPacket( EPlayerState::Hit );
+            return StateFuncResult< EPlayerState >( prevState );
+        } );
+    fsm.AddStateFunctionOnUpdate( EPlayerState::Hit, defaultUpdate );
+    fsm.AddStateFunctionOnReceiveInput( EPlayerState::Hit, defaultOnInput );
+    fsm.AddStateFunctionOnExit( EPlayerState::Hit, defaultExit );
     #pragma endregion
 
     #pragma region Win
+    fsm.AddStateFunctionOnEnter( EPlayerState::Win,
+        [this] ( EPlayerState prevState ) -> StateFuncResult< EPlayerState >
+        {
+            LogLine( "Entered" );
+            this->SendStateChangedPacket( EPlayerState::Win );
+            return StateFuncResult< EPlayerState >::NoChange( );
+        } );
+    fsm.AddStateFunctionOnUpdate( EPlayerState::Win, defaultUpdate );
+    fsm.AddStateFunctionOnReceiveInput( EPlayerState::Win, defaultOnInput );
+    fsm.AddStateFunctionOnExit( EPlayerState::Win, defaultExit );
     #pragma endregion
 
     #pragma region Lose
+    fsm.AddStateFunctionOnEnter( EPlayerState::Lose,
+        [this] ( EPlayerState prevState ) -> StateFuncResult< EPlayerState >
+        {
+            LogLine( "Entered" );
+            this->SendStateChangedPacket( EPlayerState::Lose );
+            return StateFuncResult< EPlayerState >::NoChange( );
+        } );
+    fsm.AddStateFunctionOnUpdate( EPlayerState::Lose, defaultUpdate );
+    fsm.AddStateFunctionOnReceiveInput( EPlayerState::Lose, defaultOnInput );
+    fsm.AddStateFunctionOnExit( EPlayerState::Lose, defaultExit );
     #pragma endregion
 
     #pragma region Die

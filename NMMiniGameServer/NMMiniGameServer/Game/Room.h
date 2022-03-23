@@ -63,6 +63,7 @@ namespace Game
         bool CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime );
         void ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime, Double penetration );
         Vector GetSpawnLocation( UInt32 index ) const;
+        //Vector GetFirstSpawnLocation( UInt32 index ) const;
         Vector GetSpawnForward( UInt32 index ) const;
         ERoomState GetState() const;
         void SetState( ERoomState state );

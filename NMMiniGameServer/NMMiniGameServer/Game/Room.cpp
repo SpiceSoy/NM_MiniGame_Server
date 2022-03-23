@@ -182,6 +182,12 @@ void Game::Room::CheckStateChange()
     // ³¡³µ´Â°¡?
     if ( state == ERoomState::Doing && startTime.IsOverSeconds( Constant::GameTotalTimeSeconds ) )
     {
+        Int32 maxScore = 0;
+        for( Int32 i = 0; i < maxUserCount; ++i ) maxScore = std::max( maxScore, scores[i] );
+        for ( Int32 i = 0; i < maxUserCount; ++i )
+        {
+            players[i].ChangeState( maxScore == scores[i] ? EPlayerState::Win : EPlayerState::Lose );
+        }
         SetState( ERoomState::End );
         LogLine( "End of Game" );
         BroadcastEndGame();
