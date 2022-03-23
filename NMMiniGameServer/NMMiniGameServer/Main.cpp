@@ -13,6 +13,7 @@
 #include "Game/Room.h"
 #include <iostream>
 #include <WinSock2.h>
+#include <ctime>
 
 
 constexpr Int32 DEFAULT_PORT = 4000;
@@ -20,6 +21,7 @@ constexpr Int32 DEFAULT_PORT = 4000;
 
 int main( int argc, char* argv[ ] )
 {
+    srand( static_cast<unsigned>(time( nullptr )) );
     Int32 port = argc == 1 ? DEFAULT_PORT : atoi( argv[ 1 ] );
     Network::Server server;
     server.Initialize( static_cast< UInt16 >( port ) );

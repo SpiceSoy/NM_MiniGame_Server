@@ -18,40 +18,6 @@
 #include "Network/Session.h"
 #include <algorithm>
 
-
-static const char* to_string( Game::EPlayerState e )
-{
-    using namespace Game;
-    switch ( e )
-    {
-        case EPlayerState::Spawn :
-            return "Spawn";
-        case EPlayerState::Idle :
-            return "Idle";
-        case EPlayerState::Run :
-            return "Run";
-        case EPlayerState::Rush :
-            return "Rush";
-        case EPlayerState::Rotate :
-            return "Rotate";
-        case EPlayerState::Hit :
-            return "Hit";
-        case EPlayerState::Win :
-            return "Win";
-        case EPlayerState::Lose :
-            return "Lose";
-        case EPlayerState::Die :
-            return "Die";
-        case EPlayerState::RotateLeft :
-            return "RotateLeft";
-        case EPlayerState::RotateRight :
-            return "RotateRight";
-        default :
-            return "unknown";
-    }
-}
-
-
 Int32 Game::PlayerController::GetPlayerIndex() const
 {
     return playerIndex;
@@ -93,10 +59,8 @@ void Game::PlayerController::Initialize()
     fsm.Start( EPlayerState::Spawn );
     timerRushUse.SetNow();
     timerRushGen.SetNow();
-    for ( int i = 0; i < Constant::CharacterMaxRushCount; ++i )
-    {
-        rushQueue.emplace_back( Timer::Now() );
-    }
+    rushCount = Constant::CharacterMaxRushCount;
+    SendRushCountChangedPacket( );
 }
 
 
@@ -115,12 +79,17 @@ void Game::PlayerController::Update( Double deltaTime )
     // 러시 개수 체크
     if ( rushCount < Constant::CharacterMaxRushCount )
     {
-        auto it = std::next( rushQueue.begin(), rushCount );
-        if ( it->IsOverNow() )
+        if( timerRushGen.IsOverSeconds( Constant::CharacterRushCountRegenSeconds ) )
         {
             rushCount++;
             SendRushCountChangedPacket();
+            timerRushGen.SetNow();
         }
+    }
+
+    if ( IsItemDurationExpired() )
+    {
+        RemoveBuff();
     }
 }
 
@@ -151,19 +120,25 @@ void Game::PlayerController::ChangeState( EPlayerState state )
 
 void Game::PlayerController::UseRush()
 {
-    timerRushUse.SetNow().AddSeconds( Constant::CharacterRushMinimumRecastSeconds );
-    rushQueue.pop_front();
-    rushQueue.emplace_back( Timer::Now().AddSeconds( Constant::CharacterRushCountRegenSeconds ) );
-    character->AddSpeed( character->GetForward() * Constant::CharacterRushSpeed );
-    rushCount -= 1;
-    SendRushCountChangedPacket();
+    timerRushUse.SetNow( );
+    character->AddSpeed( character->GetForward( ) * Constant::CharacterRushSpeed );
+    if( IsUseRushStack() )
+    {
+        timerRushGen.SetNow( );
+        rushCount -= 1;
+        SendRushCountChangedPacket();
+    }
+    else
+    {
+        LogLine( "Not Use Rush Stack" );
+    }
 }
 
 
 bool Game::PlayerController::CanRush()
 {
-    bool canRecast = timerRushUse.IsOverNow();
-    bool hasRushCount = rushQueue.front().IsOverNow();
+    bool canRecast = timerRushUse.IsOverSeconds( rushRecastTime );
+    bool hasRushCount = ( !IsUseRushStack( ) ) || rushCount > 0;
     if ( hasRushCount && canRecast ) return true;
     return false;
 }
@@ -172,6 +147,42 @@ bool Game::PlayerController::CanRush()
 void Game::PlayerController::SendStateChangedPacket() const
 {
     SendStateChangedPacket( this->GetState() );
+}
+
+
+void Game::PlayerController::SendBuffStartPacket() const
+{
+    Packet::Server::BuffStart packet;
+    packet.playerIndex = this->playerIndex;
+    packet.buffType = static_cast< Byte >( this->currentItem );
+    this->room->BroadcastPacket( &packet );
+}
+
+
+void Game::PlayerController::SendBuffEndPacket() const
+{
+    Packet::Server::BuffRemove packet;
+    packet.playerIndex = this->playerIndex;
+    packet.buffType = static_cast< Byte >( this->currentItem );
+    this->room->BroadcastPacket( &packet );
+}
+
+
+void Game::PlayerController::SendKingStartPacket() const
+{
+    Packet::Server::BuffStart packet;
+    packet.playerIndex = this->playerIndex;
+    packet.buffType = static_cast<Byte>( EItemType::King );
+    this->room->BroadcastPacket( &packet );
+}
+
+
+void Game::PlayerController::SendKingEndPacket() const
+{
+    Packet::Server::BuffRemove packet;
+    packet.playerIndex = this->playerIndex;
+    packet.buffType = static_cast<Byte>( EItemType::King );
+    this->room->BroadcastPacket( &packet );
 }
 
 
@@ -196,6 +207,32 @@ void Game::PlayerController::LogLine( const char* format, ... ) const
     vprintf_s( format, va );
     va_end( va );
     printf( "\n" );
+}
+
+
+bool Game::PlayerController::IsItemDurationExpired()
+{
+    Double buffDuration = 0.0;
+    switch ( currentItem )
+    {
+        case EItemType::Clover:
+            buffDuration = Constant::ItemCloverDurationSeconds;
+            break;
+        case EItemType::Fortify:
+            buffDuration = Constant::ItemFortifyDurationSeconds;
+            break;
+        case EItemType::Ghost:
+            buffDuration = Constant::ItemGhostDurationSeconds;
+            break;
+        case EItemType::StrongWill:
+            buffDuration = Constant::ItemStrongWillDurationSeconds;
+            break;
+        case EItemType::SwiftMove:
+            buffDuration = Constant::ItemSwiftMoveDurationSeconds;
+            break;
+    }
+
+    return currentItem != EItemType::None ? timerItemChanged.IsOverSeconds( buffDuration ) : false;
 }
 
 
@@ -230,6 +267,95 @@ Int32 Game::PlayerController::GetLastCollidedPlayerIndex() const
 {
     if ( timerLastCollided.IsOverSeconds( Constant::ScoreKillerJudgeTime ) ) return Constant::NullPlayerIndex;
     else return lastCollidedPlayerIndex;
+}
+
+
+void Game::PlayerController::ApplyBuff( EItemType item )
+{
+    LogLine( "Apply Buff %s", to_string( item ) );
+    currentItem = item;
+    timerItemChanged.SetNow();
+    SendBuffStartPacket();
+    switch( currentItem )
+    {
+        case EItemType::Clover:
+            // 스택 미 소모
+            this->character->SetWeight( Constant::ItemCloverWeight );
+            this->character->SetMoveSpeed( Constant::ItemCloverSpeed );
+            break;
+        case EItemType::Fortify:
+            this->character->SetWeight( Constant::ItemFortifyWeight );
+            break;
+        case EItemType::Ghost:
+        // 클라에서 처리
+
+            break;
+        case EItemType::StrongWill:
+        // 스택 미 소모
+            rushRecastTime = Constant::ItemStrongWillRecastSeconds;
+            break;
+        case EItemType::SwiftMove:
+            this->character->SetMoveSpeed( Constant::ItemSwiftMoveSpeed );
+            break;
+        case EItemType::None:
+            break;
+        default: ;
+    }
+}
+
+
+void Game::PlayerController::ApplyKing()
+{
+    LogLine( "Apply King" );;
+    SendKingStartPacket( );
+    this->character->SetRadius( Constant::CharacterKingRadius );
+}
+
+
+void Game::PlayerController::RemoveBuff()
+{
+    LogLine( "Remove Buff %s", to_string( currentItem ) );
+    SendBuffEndPacket( );
+    switch ( currentItem )
+    {
+        case EItemType::Clover:
+            // 스택 미 소모
+            this->character->SetWeight( Constant::CharacterWeight );
+            this->character->SetMoveSpeed( Constant::CharacterDefaultSpeed );
+            break;
+        case EItemType::Fortify:
+            this->character->SetWeight( Constant::CharacterWeight );
+            break;
+        case EItemType::Ghost:
+            // 클라에서 처리
+            break;
+        case EItemType::StrongWill:
+            // 스택 미 소모
+            rushRecastTime = Constant::CharacterRushMinimumRecastSeconds;
+            break;
+        case EItemType::SwiftMove:
+            this->character->SetMoveSpeed( Constant::CharacterDefaultSpeed );
+            break;
+        case EItemType::None:
+            break;
+        default: ;
+    }
+    currentItem = EItemType::None;
+}
+
+
+void Game::PlayerController::RemoveKing()
+{
+    LogLine( "Remove King" );
+    this->character->SetRadius( Constant::CharacterRadius );
+    SendKingEndPacket();
+}
+
+
+bool Game::PlayerController::IsUseRushStack() const
+{
+    LogLine( "IsUseRushStakc : %d" , !( currentItem == EItemType::Clover || currentItem == EItemType::StrongWill ) );
+    return !( currentItem == EItemType::Clover || currentItem == EItemType::StrongWill );
 }
 
 
@@ -268,22 +394,22 @@ void Game::PlayerController::AddStateFunctions()
                                 {
                                     //LogLine( "Entered" );
                                     this->SendStateChangedPacket();
-                                    this->character->SetMoveSpeed( 0 );
+                                    this->character->StopMove( );
+                                    this->character->SetInfiniteWeight( true );
                                     Double waitTime = prevState == EPlayerState::Die ? Constant::CharacterRespawnSeconds : Constant::GameFirstWaitSeconds;
                                     this->timerSpawnStart.SetNow().AddSeconds( waitTime );
                                     return StateFuncResult< EPlayerState >::NoChange();
-                                }
-                               );
+                                } );
     fsm.AddStateFunctionOnUpdate( EPlayerState::Spawn,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
                                      if ( this->timerSpawnStart.IsOverNow() )
                                      {
+                                         this->character->SetInfiniteWeight( false );
                                          return StateFuncResult< EPlayerState >( EPlayerState::Idle );
                                      }
                                      return StateFuncResult< EPlayerState >::NoChange();
-                                 }
-                                );
+                                 } );
     fsm.AddStateFunctionOnReceiveInput( EPlayerState::Spawn, defaultOnInput );
     fsm.AddStateFunctionOnExit( EPlayerState::Spawn, defaultExit );
     #pragma endregion
@@ -293,9 +419,8 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnUpdate( EPlayerState::Idle,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
-                                        return StateFuncResult< EPlayerState >( EPlayerState::Run );
-                                 }
-                                );
+                                     return StateFuncResult< EPlayerState >( EPlayerState::Run );
+                                 } );
     fsm.AddStateFunctionOnReceiveInput( EPlayerState::Idle,
                                        []( const Packet::Client::Input& input ) -> StateFuncResult< EPlayerState >
                                        {
@@ -312,8 +437,7 @@ void Game::PlayerController::AddStateFunctions()
                                                return StateFuncResult< EPlayerState >( EPlayerState::Rush );
                                            }
                                            return StateFuncResult< EPlayerState >::NoChange();
-                                       }
-                                      );
+                                       } );
     fsm.AddStateFunctionOnExit( EPlayerState::Idle, defaultExit );
     #pragma endregion
 
@@ -323,10 +447,9 @@ void Game::PlayerController::AddStateFunctions()
                                 {
                                     //LogLine( "Entered" );
                                     this->SendStateChangedPacket();
-                                    this->character->SetMoveSpeed( Constant::CharacterDefaultSpeed );
+                                    this->character->StartMove();
                                     return StateFuncResult< EPlayerState >::NoChange();
-                                }
-                               );
+                                } );
     fsm.AddStateFunctionOnUpdate( EPlayerState::Run, defaultUpdate );
     fsm.AddStateFunctionOnReceiveInput( EPlayerState::Run,
                                        []( const Packet::Client::Input& input ) -> StateFuncResult< EPlayerState >
@@ -344,8 +467,7 @@ void Game::PlayerController::AddStateFunctions()
                                                return StateFuncResult< EPlayerState >( EPlayerState::Rush );
                                            }
                                            return StateFuncResult< EPlayerState >::NoChange();
-                                       }
-                                      );
+                                       } );
     fsm.AddStateFunctionOnExit( EPlayerState::Run, defaultExit );
     #pragma endregion
 
@@ -355,17 +477,15 @@ void Game::PlayerController::AddStateFunctions()
                                 {
                                     //LogLine( "Entered" );
                                     this->SendStateChangedPacket( EPlayerState::Rotate );
-                                    this->character->SetMoveSpeed( 0 );
+                                    this->character->StopMove( );
                                     return StateFuncResult< EPlayerState >::NoChange();
-                                }
-                               );
+                                } );
     fsm.AddStateFunctionOnUpdate( EPlayerState::RotateLeft,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
                                      character->RotateLeft( Constant::CharacterRotateSpeed * deltaTime );
                                      return StateFuncResult< EPlayerState >::NoChange();
-                                 }
-                                );
+                                 } );
     fsm.AddStateFunctionOnReceiveInput( EPlayerState::RotateLeft,
                                        []( const Packet::Client::Input& input ) -> StateFuncResult< EPlayerState >
                                        {
@@ -382,8 +502,7 @@ void Game::PlayerController::AddStateFunctions()
                                                return StateFuncResult< EPlayerState >( EPlayerState::Rush );
                                            }
                                            return StateFuncResult< EPlayerState >::NoChange();
-                                       }
-                                      );
+                                       } );
     fsm.AddStateFunctionOnExit( EPlayerState::RotateLeft, defaultExit );
     #pragma endregion
 
@@ -393,17 +512,15 @@ void Game::PlayerController::AddStateFunctions()
                                 {
                                     //LogLine( "Entered" );
                                     this->SendStateChangedPacket( EPlayerState::Rotate );
-                                    this->character->SetMoveSpeed( 0 );
+                                    this->character->StopMove( );
                                     return StateFuncResult< EPlayerState >::NoChange();
-                                }
-                               );
+                                } );
     fsm.AddStateFunctionOnUpdate( EPlayerState::RotateRight,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
                                      character->RotateRight( Constant::CharacterRotateSpeed * deltaTime );
                                      return StateFuncResult< EPlayerState >::NoChange();
-                                 }
-                                );
+                                 } );
     fsm.AddStateFunctionOnReceiveInput( EPlayerState::RotateRight,
                                        []( const Packet::Client::Input& input ) -> StateFuncResult< EPlayerState >
                                        {
@@ -420,8 +537,7 @@ void Game::PlayerController::AddStateFunctions()
                                                return StateFuncResult< EPlayerState >( EPlayerState::Rush );
                                            }
                                            return StateFuncResult< EPlayerState >::NoChange();
-                                       }
-                                      );
+                                       } );
     fsm.AddStateFunctionOnExit( EPlayerState::RotateRight, defaultExit );
     #pragma endregion
 
@@ -440,8 +556,7 @@ void Game::PlayerController::AddStateFunctions()
                                     //LogLine( "Failed" );
                                     return StateFuncResult< EPlayerState >( prevState );
                                     return StateFuncResult< EPlayerState >::NoChange();
-                                }
-                               );
+                                } );
     fsm.AddStateFunctionOnUpdate( EPlayerState::Rush,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
@@ -450,8 +565,7 @@ void Game::PlayerController::AddStateFunctions()
                                          return StateFuncResult< EPlayerState >( EPlayerState::Run );
                                      }
                                      return StateFuncResult< EPlayerState >::NoChange();
-                                 }
-                                );
+                                 } );
     fsm.AddStateFunctionOnReceiveInput( EPlayerState::Rush, defaultOnInput );
     fsm.AddStateFunctionOnExit( EPlayerState::Rush, defaultExit );
     #pragma endregion
@@ -473,11 +587,10 @@ void Game::PlayerController::AddStateFunctions()
                                     timerRespawnStart.SetNow();
                                     Vector outVector = character->GetLocation().Normalized();
                                     this->SendStateChangedPacket( EPlayerState::Die );
-                                    character->SetMoveSpeed( 0 );
+                                    character->StopMove( );
                                     character->SetSpeed( outVector * Constant::CharacterMapOutSpeed );
                                     return StateFuncResult< EPlayerState >::NoChange();
-                                }
-                               );
+                                } );
     fsm.AddStateFunctionOnUpdate( EPlayerState::Die,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
@@ -490,9 +603,9 @@ void Game::PlayerController::AddStateFunctions()
                                          return StateFuncResult< EPlayerState >( EPlayerState::Spawn );
                                      }
                                      return StateFuncResult< EPlayerState >::NoChange();
-                                 }
-                                );
+                                 } );
     fsm.AddStateFunctionOnReceiveInput( EPlayerState::Die, defaultOnInput );
     fsm.AddStateFunctionOnExit( EPlayerState::Die, defaultExit );
     #pragma endregion
 }
+

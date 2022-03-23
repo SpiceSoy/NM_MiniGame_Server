@@ -301,14 +301,6 @@ void Network::Server::Select()
 
 void Network::Server::RemoveExpiredSession()
 {
-    //auto it = std::remove_if( sessions.begin(),
-    //                         sessions.end(),
-    //                         []( Session& session )
-    //                         {
-    //                             return session.IsClosed();
-    //                         }
-    //                        );
-    //sessions.erase( it, sessions.end() );
     sessions.remove_if( []( Session& session )
                        {
                            return session.IsClosed();

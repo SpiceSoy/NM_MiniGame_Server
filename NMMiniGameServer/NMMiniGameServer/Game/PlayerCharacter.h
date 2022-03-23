@@ -25,6 +25,9 @@ namespace Game
         Vector forward;
         Double defaultMove;
         Double radius;
+        Double weight;
+        bool isMove = false;
+        bool isInfiniteWeight = false;
         std::set< const void* > collidFillter; // 한번만 충돌되도록 필터링합니다.
     public:
         PlayerCharacter();
@@ -38,6 +41,10 @@ namespace Game
         const Double& GetMoveSpeed() const;
         PlayerCharacter& SetMoveSpeed( const Double& speed );
 
+        const Double& GetWeight( ) const;
+        PlayerCharacter& SetWeight( const Double& weight );
+        PlayerCharacter& SetInfiniteWeight( bool isInfiniteWeight );
+
         const Vector& GetLocation() const;
         PlayerCharacter& SetLocation( const Vector& location );
 
@@ -45,6 +52,9 @@ namespace Game
         PlayerCharacter& SetRadius( Double radius );
 
         PlayerCharacter& SetRotation( Double rotation );
+
+        void StartMove();
+        void StopMove();
 
         const Vector& GetForward() const;
         Vector GetFinalSpeed() const;

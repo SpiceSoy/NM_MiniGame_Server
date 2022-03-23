@@ -10,9 +10,12 @@
 
 
 #pragma once
+#include "Game/Item.h"
 #include "Game/PlayerController.h"
 #include "Game/PlayerCharacter.h"
+#include "Game/RoomState.h"
 #include <vector>
+#include <set>
 
 
 namespace Network
@@ -23,14 +26,6 @@ namespace Network
 
 namespace Game
 {
-    enum class ERoomState
-    {
-        Opened,
-        Waited,
-        Doing,
-        End,
-        Closed
-    };
 
     class Room
     {
@@ -41,8 +36,13 @@ namespace Game
         std::vector< PlayerCharacter > characters;
         std::vector< Network::Session* > sessions;
         std::vector< Int32 > scores;
+        std::set< Int32 > prevMaxUsers;
+        std::list<Item> items;
         Timer startTime;
+        Timer itemSpawnedTime;
         ERoomState state;
+        Int32 itemIndex = 0;
+        Double currentMapSize = 0;
     public:
         Room( Int32 userCount );
         ~Room() = default;
@@ -66,17 +66,31 @@ namespace Game
         ERoomState GetState() const;
         void SetState( ERoomState state );
         void BroadcastKillLogPacket( Int32 playerIndex, Int32 killerIndex );
+        void CheckNewKing();
         void OnDiePlayer( const PlayerController* player );
     private:
         void CheckCollision( Double deltaTime );
 
-        bool IsCollide( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double& resultPenetration );
+        static bool IsCollide( const PlayerCharacter& firstChr, const PlayerCharacter& secondChr, Double& resultPenetration );
+        static bool IsCollide( const PlayerCharacter& character, const Item& item );
 
         void BroadcastByteInternal( const Byte* data, UInt32 size, PlayerController* expectedUser );
         void BroadcastStartGame();
         void BroadcastEndGame();
+        void BroadcastSpawnItem( const Item& item );
+        void BroadcastRemoveItem( const Item& item, bool isEaten );
         void LogLine( const char* format, ... ) const;
         PlayerController* GetNewPlayerController( Int32 index, Network::Session* session );
+        void SpawnItem();
+        Vector GetRandomItemLocation() const;
+        void CheckCollisionItem();
+
+        void UpdatePlayerController( Double deltaTime );
+        void UpdateCharacter( Double deltaTime );
+        void CheckStateChange();
+
+        void UpdateItem( Double deltaTime );
+
     };
 
     // 템플릿 함수들

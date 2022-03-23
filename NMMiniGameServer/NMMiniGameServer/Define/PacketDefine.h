@@ -35,6 +35,12 @@ namespace Packet
         ServerMatchCanceled,
         ServerReadyMatching,
         ServerCancelReadyMatching,
+
+        ServerItemSpawn,
+        ServerItemRemove,
+        ServerBuffStart,
+        ServerBuffRemove,
+
         ClientTypeStart = 0x80,
         ClientRequestFindMatch,
         ClientRequestCancelMatch,
@@ -156,6 +162,39 @@ namespace Packet
             Single velocityY;
             Single velocityZ;
         };
+
+
+        struct ItemSpawn
+        {
+            Header header = SERVER_HEADER( ItemSpawn );
+            Single locationX;
+            Single locationY;
+            Single locationZ;
+            Byte itemType;
+            Int32 itemIndex;
+        };
+
+        struct ItemRemove
+        {
+            Header header = SERVER_HEADER( ItemRemove );
+            bool isEaten;
+            Int32 itemIndex;
+        };
+
+        struct BuffStart
+        {
+            Header header = SERVER_HEADER ( BuffStart );
+            Int32 playerIndex;
+            Byte buffType;
+        };
+
+        struct BuffRemove
+        {
+            Header header = SERVER_HEADER( BuffRemove );
+            Int32 playerIndex;
+            Byte buffType;
+        };
+
     };
 
 

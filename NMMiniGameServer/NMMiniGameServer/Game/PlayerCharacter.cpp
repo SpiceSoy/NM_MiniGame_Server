@@ -17,7 +17,7 @@
 
 
 Game::PlayerCharacter::PlayerCharacter()
-    : location( 0 ), speed( 0 ), forward( 0, 1, 0 ), defaultMove( 0 ), radius( Constant::CharacterRadius )
+    : location( 0 ), speed( 0 ), forward( 0, 1, 0 ), defaultMove( Constant::CharacterDefaultSpeed ), radius( Constant::CharacterRadius ), weight( Constant::CharacterWeight )
 {
 }
 
@@ -67,6 +67,26 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetMoveSpeed( const Double& speed 
 }
 
 
+const Double& Game::PlayerCharacter::GetWeight() const
+{
+    return  isInfiniteWeight ? Constant::CharacterInfiniteWeight : weight;
+}
+
+
+Game::PlayerCharacter& Game::PlayerCharacter::SetWeight( const Double& weight )
+{
+    this->weight = weight;
+    return *this;
+}
+
+
+Game::PlayerCharacter& Game::PlayerCharacter::SetInfiniteWeight( bool isInfiniteWeight )
+{
+    this->isInfiniteWeight = isInfiniteWeight;
+    return *this;
+}
+
+
 const Game::Vector& Game::PlayerCharacter::GetLocation() const
 {
     return location;
@@ -101,6 +121,18 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetRotation( Double rotation )
 }
 
 
+void Game::PlayerCharacter::StartMove()
+{
+    this->isMove = true;
+}
+
+
+void Game::PlayerCharacter::StopMove()
+{
+    this->isMove = false;
+}
+
+
 const Game::Vector& Game::PlayerCharacter::GetForward() const
 {
     return forward;
@@ -109,7 +141,7 @@ const Game::Vector& Game::PlayerCharacter::GetForward() const
 
 Game::Vector Game::PlayerCharacter::GetFinalSpeed() const
 {
-    return speed + forward * defaultMove;
+    return speed + forward * ( isMove ? defaultMove : 0.0 );
 }
 
 

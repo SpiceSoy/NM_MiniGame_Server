@@ -33,9 +33,37 @@ namespace Constant
     extern Double MapCharacterDefaultHeight;
     extern Double MapSpawnRespawnHeight;
 
+    //
+    extern Double ItemRadius;
+    extern Double ItemRegenMinSeconds;
+    extern Double ItemRegenMaxSeconds;
+    extern Double ItemSpawnLocationMapSizeRatio;
+    extern Double ItemCloverSpawnStartTime;
+    extern Double ItemLifeMaxSeconds;
+    extern Double ItemSameTimeMaxSpawnCount;
+
+    //실제 아이템 효과 및 지속시간
+    extern Double ItemFortifyWeight;
+    extern Double ItemFortifyDurationSeconds;
+
+    extern Double ItemSwiftMoveSpeed;
+    extern Double ItemSwiftMoveDurationSeconds;
+    \
+    extern Double ItemStrongWillRecastSeconds;
+    extern Double ItemStrongWillDurationSeconds;
+
+    extern Double ItemGhostDurationSeconds;
+
+    extern Double ItemCloverWeight;
+    extern Double ItemCloverSpeed;
+    extern Double ItemCloverDurationSeconds;
+
+    extern Double CharacterKingRadius; // 캐릭터 충돌 판정 크기
+
     // Character
     extern Double CharacterRadius;
     extern Double CharacterWeight;
+    extern Double CharacterInfiniteWeight;
     extern Double CharacterDefaultSpeed;
     extern Double CharacterRotateSpeed;
     extern Double CharacterRushSpeed;

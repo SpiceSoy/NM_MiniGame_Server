@@ -12,9 +12,10 @@
 #pragma once
 #include "Define/DataTypes.h"
 #include "Define/MapData.h"
-#include "Game/Vector.h"
 #include "Game/LambdaFSM.h"
+#include "Game/PlayerState.h"
 #include "Game/Timer.h"
+#include "Game/ItemType.h"
 #include <list>
 
 
@@ -38,25 +39,10 @@ namespace Packet
 
 namespace Game
 {
-    enum class EPlayerState : Byte
-    {
-        Spawn = 0,
-        Idle = 1,
-        Run = 2,
-        Rush = 3,
-        Rotate = 4,
-        Hit = 5,
-        Win = 6,
-        Lose = 7,
-        Die = 8,
-        // not used in client
-        RotateLeft = 9,
-        RotateRight = 10,
-    };
+
 
     class PlayerController
     {
-    public:
     private:
         class PlayerCharacter* character = nullptr;
         Network::Session* session = nullptr;
@@ -64,10 +50,10 @@ namespace Game
 
         LambdaFSM< EPlayerState > fsm;
         Int32 playerIndex = 0;
-    public:
-        Int32 GetPlayerIndex() const;
-    private:
-        std::list< Timer > rushQueue;
+
+        EItemType currentItem = EItemType::None;
+        Timer timerItemChanged;
+
         Timer timerRushUse;
         Timer timerRushGen;
         Int32 rushCount = 0;
@@ -77,6 +63,7 @@ namespace Game
 
         Timer timerLastCollided;
         Int32 lastCollidedPlayerIndex = Constant::NullPlayerIndex;
+        Double rushRecastTime = Constant::CharacterRushMinimumRecastSeconds;
     public:
         PlayerController();
         ~PlayerController() = default;
@@ -85,7 +72,7 @@ namespace Game
         void SetRoom( Room* room );
         void SetPlayerIndex( Int32 playerIndex );
         void Initialize();
-
+        Int32 GetPlayerIndex( ) const;
         template < class PacketType >
         void SendPacket( const PacketType* buffer ) const;
         void SendByte( const Byte* data, UInt64 size ) const;
@@ -97,14 +84,24 @@ namespace Game
         void BroadcastObjectLocation( bool isSetHeight ) const;
         void OnCollided( const PlayerController& other );
         Int32 GetLastCollidedPlayerIndex() const;
+        void ApplyBuff( EItemType item );
+        void ApplyKing();
+        void RemoveBuff(  );
+        void RemoveKing( );
     private:
+        bool IsUseRushStack() const;
         bool CanRush();
         void UseRush();
         void AddStateFunctions();
         void SendStateChangedPacket( EPlayerState state ) const;
         void SendStateChangedPacket() const;
+        void SendBuffStartPacket( ) const;
+        void SendBuffEndPacket( ) const;
+        void SendKingStartPacket( ) const;
+        void SendKingEndPacket( ) const;
         void SendRushCountChangedPacket() const;
         void LogLine( const char* format, ... ) const;
+        bool IsItemDurationExpired();
     };
 
 
