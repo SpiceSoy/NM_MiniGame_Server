@@ -110,6 +110,7 @@ void Network::Session::Close()
     closesocket( this->socket );
     SetState( EState::Closed );
     if ( contoller ) contoller->SetSession( nullptr );
+    if( server )server->PostSessionClosed( this );
 }
 
 

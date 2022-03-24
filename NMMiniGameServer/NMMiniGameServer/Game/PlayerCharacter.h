@@ -37,6 +37,7 @@ namespace Game
         const Vector& GetSpeed() const;
         PlayerCharacter& SetSpeed( const Vector& speed );
         PlayerCharacter& AddSpeed( const Vector& speed );
+        PlayerCharacter& ClampSpeed( const Double& speed );
 
         const Double& GetMoveSpeed() const;
         PlayerCharacter& SetMoveSpeed( const Double& speed );

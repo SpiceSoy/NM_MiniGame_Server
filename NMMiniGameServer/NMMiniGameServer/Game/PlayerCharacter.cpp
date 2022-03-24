@@ -54,6 +54,15 @@ Game::PlayerCharacter& Game::PlayerCharacter::AddSpeed( const Vector& speed )
 }
 
 
+Game::PlayerCharacter& Game::PlayerCharacter::ClampSpeed( const Double& speed )
+{
+    auto length =  this->speed.GetLength();
+    this->speed.Normalize();
+    this->speed *= std::min( length, speed );
+    return *this;
+}
+
+
 const Double& Game::PlayerCharacter::GetMoveSpeed() const
 {
     return defaultMove;
@@ -154,6 +163,7 @@ Game::PlayerCharacter& Game::PlayerCharacter::SetForward( const Vector& forward 
 
 void Game::PlayerCharacter::Update( Double deltaTime )
 {
+
     location += GetFinalSpeed() * deltaTime;
     assert( location.IsNan() == false );
     // ¸¶Âû·Â

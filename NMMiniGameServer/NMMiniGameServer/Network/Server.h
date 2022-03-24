@@ -63,6 +63,7 @@ namespace Network
         void CancelRequest( Session* requester );
         void PostReadyMatch( Session* requester );
         void PostCancelReadyMatch( Session* requester );
+        void PostSessionClosed( Session* session );
     private:
         void InitializeSocket();
         void CreateListenSocket();

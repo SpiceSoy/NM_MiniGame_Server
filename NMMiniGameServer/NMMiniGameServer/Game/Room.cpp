@@ -284,8 +284,8 @@ void Game::Room::ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& s
     auto normal = ( a.GetLocation() - b.GetLocation() ).Normalized();
 
 
-    firstChr.SetLocation( firstChr.GetLocation() - normal * penetration * 0.4f );
-    secondChr.SetLocation( secondChr.GetLocation() + normal * penetration * 0.4f );
+    firstChr.SetLocation( firstChr.GetLocation() - normal * penetration * 0.505f );
+    secondChr.SetLocation( secondChr.GetLocation() + normal * penetration * 0.505f );
 
     Double velAlongNormal = Vector::Dot( rv, normal );
     if ( velAlongNormal > 0 ) return;
@@ -299,8 +299,10 @@ void Game::Room::ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& s
     auto impulse = normal * j;
     Vector aNewSpeed = ( impulse / AMass );
     a.AddSpeed( aNewSpeed );
+    a.ClampSpeed( Constant::CharacterMaxSpeed );
     Vector bNewSpeed = -( impulse / BMass );
     b.AddSpeed( bNewSpeed );
+    b.ClampSpeed( Constant::CharacterMaxSpeed );
     printf( "Collision by A[%lf,%lf,%lf] / B[%lf,%lf,%lf] / penetraion : %lf\n", aNewSpeed.x, aNewSpeed.y, aNewSpeed.z, bNewSpeed.x, bNewSpeed.y, bNewSpeed.z, penetration );
 }
 
@@ -309,9 +311,9 @@ void Game::Room::ResolveSpawnCollision( PlayerCharacter& spawnCharacter, PlayerC
 {
     auto& a = spawnCharacter;
     auto& b = other;
-    auto normal = ( a.GetLocation( ) - b.GetLocation( ) ).Normalized( );
+    auto normal = ( b.GetLocation( ) - a.GetLocation( ) ).Normalized( );
 
-    other.SetLocation( other.GetLocation( ) + normal * penetration );
+    other.SetLocation( other.GetLocation( ) + normal * penetration * 1.1f );
 }
 
 
@@ -523,8 +525,10 @@ void Game::Room::OnDiePlayer( const PlayerController* player )
     Int32 playerIndex = player->GetPlayerIndex();
     Int32 killerIndex = player->GetLastCollidedPlayerIndex();
     bool hasKiller = killerIndex != Constant::NullPlayerIndex;
-    Int32 PlayerScore = hasKiller ? Constant::ScoreDiePlayer : Constant::ScoreSelfDiePlayer;
-    scores[ playerIndex ] += PlayerScore;
+    Int32 AddedScore = hasKiller ? Constant::ScoreDiePlayer : Constant::ScoreSelfDiePlayer;
+    Int32 playerLastScore = scores[playerIndex] + AddedScore;
+    
+    scores[playerIndex] = std::max( playerLastScore, 0 );
 
     //Update King
 

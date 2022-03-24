@@ -79,6 +79,7 @@ Void Network::Server::Process()
             QueuingMatch();
             turnOnMatch = false;
         }
+        RemoveExpiredSession(); // TODO: 수정 필요!!
     }
     return;
 }
@@ -100,7 +101,7 @@ void Network::Server::CancelRequest( Session* requester )
                                return match.requester == requester;
                            }
                           );
-    matchQueue.erase( it );
+    if(it != matchQueue.end() ) matchQueue.erase( it );
     turnOnMatch = true;
 }
 
@@ -163,9 +164,9 @@ void Network::Server::PostCancelReadyMatch( Session* requester )
             }
             std::cout << "Add Request " << std::endl;
         }
+        readyMatches.erase( it );
     }
     std::cout << "Cancel Match Ready " << requester << std::endl;
-    readyMatches.erase( it );
     Packet::Server::MatchCanceled packet;
     requester->SendPacket( &packet );
 }
@@ -295,7 +296,7 @@ void Network::Server::Select()
         session.Close();
         session.LogInput( "connection error" );
     }
-    RemoveExpiredSession();
+
 }
 
 
@@ -372,6 +373,13 @@ void Network::Server::UpdateRooms( Double deltaTime )
     {
         room.Update( deltaTime );
     }
+}
+
+
+void Network::Server::PostSessionClosed( Session* session )
+{
+    this->CancelRequest( session );
+    this->PostCancelReadyMatch( session );
 }
 
 
