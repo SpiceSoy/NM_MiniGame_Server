@@ -127,6 +127,7 @@ namespace Packet
         struct EndGame
         {
             Header header = SERVER_HEADER( EndGame );
+            Int32 maxPlayer;
             Int32 scores[ 4 ];
         };
 

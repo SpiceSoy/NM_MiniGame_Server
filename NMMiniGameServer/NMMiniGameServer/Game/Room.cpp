@@ -244,18 +244,29 @@ void Game::Room::BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUse
 }
 
 
-bool Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime )
+bool Game::Room::CheckCollisionTwoPlayer( PlayerCharacter& firstChr, Game::PlayerController& firstCon, Game::PlayerCharacter& secondChr, Game::PlayerController& secondCon, Double deltaTime )
 {
     Double penetration = 0.0;
     bool isCollide = IsCollide( firstChr, secondChr, penetration );
-    bool isLastCollided = firstChr.GetColliderFillter( secondChr ) || secondChr.GetColliderFillter( firstChr );
+    bool isLastCollided = firstChr.GetColliderFillter( firstChr ) || secondChr.GetColliderFillter( firstChr );
     //if( isCollide )
     if ( isCollide && !isLastCollided )
     {
         firstChr.TurnOnColliderFillter( secondChr );
         secondChr.TurnOnColliderFillter( firstChr );
 
-        ResolveCollision( firstChr, secondChr, deltaTime, penetration );
+        if( firstCon.GetState( ) == EPlayerState::Spawn )
+        {
+            ResolveSpawnCollision( firstChr, secondChr, deltaTime, penetration );
+        }
+        else if( secondCon.GetState( ) == EPlayerState::Spawn )
+        {
+            ResolveSpawnCollision( secondChr, firstChr, deltaTime, penetration );
+        }
+        else
+        {
+            ResolveCollision( firstChr, secondChr, deltaTime, penetration );
+        }
         return true;
     }
 
@@ -294,6 +305,16 @@ void Game::Room::ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& s
 }
 
 
+void Game::Room::ResolveSpawnCollision( PlayerCharacter& spawnCharacter, PlayerCharacter& other, Double deltaTime, Double penetration )
+{
+    auto& a = spawnCharacter;
+    auto& b = other;
+    auto normal = ( a.GetLocation( ) - b.GetLocation( ) ).Normalized( );
+
+    other.SetLocation( other.GetLocation( ) + normal * penetration );
+}
+
+
 void Game::Room::CheckCollision( Double deltaTime )
 {
     for ( Int32 first = 0; first < maxUserCount; first++ )
@@ -304,7 +325,10 @@ void Game::Room::CheckCollision( Double deltaTime )
         {
             PlayerCharacter& secondChr = characters[ second ];
             PlayerController& secondCon = players[ second ];
-            bool isCollide = CheckCollisionTwoPlayer( firstChr, secondChr, deltaTime );
+            bool isCollide = CheckCollisionTwoPlayer( 
+                firstChr, firstCon,
+                secondChr, secondCon,
+                deltaTime );
             if ( isCollide )
             {
                 firstCon.OnCollided( secondCon );
@@ -359,6 +383,7 @@ void Game::Room::BroadcastStartGame()
 void Game::Room::BroadcastEndGame()
 {
     Packet::Server::EndGame packet;
+    packet.maxPlayer = maxUserCount;
     std::memset( packet.scores, 0, sizeof( packet.scores ) );
     std::memcpy( packet.scores, scores.data(), scores.size() * sizeof( scores[ 0 ] ) );
     BroadcastPacket( &packet );
@@ -412,8 +437,13 @@ void Game::Room::LogLine( const char* format, ... ) const
 
 Game::Vector Game::Room::GetSpawnLocation( UInt32 index ) const
 {
+    Double currentSize = currentMapSize;
+    if( startTime.IsOverSeconds( Constant::MapFirstDisableSeconds - 5 ) ) currentSize = Constant::MapFirstDisableSize;
+
+    if( startTime.IsOverSeconds( Constant::MapSecondDisableSeconds - 5 ) ) currentSize = Constant::MapSecondDisableSize;
+
     Double angle = 360.0 * ( static_cast< Double >( index + 1 ) / static_cast< Double >( maxUserCount ) );
-    Double spawnLength = Constant::MapSpawnPointRatio * currentMapSize;
+    Double spawnLength = Constant::MapSpawnPointRatio * currentSize;
     Vector spawnPoint = Vector( 0.0, -spawnLength, 0.0 ).Rotated2D( angle );
     return spawnPoint;
 }
@@ -455,7 +485,7 @@ void Game::Room::CheckNewKing()
 
     for ( Int32 i = 0; i < maxUserCount; ++i )
     {
-        if ( maxScore > scores[ i ] )
+        if ( maxScore < scores[ i ] )
         {
             maxUsers.clear();
             maxScore = scores[ i ];

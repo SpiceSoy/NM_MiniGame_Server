@@ -141,7 +141,7 @@ const Game::Vector& Game::PlayerCharacter::GetForward() const
 
 Game::Vector Game::PlayerCharacter::GetFinalSpeed() const
 {
-    return speed + forward * ( isMove ? defaultMove : 0.0 );
+    return speed + (forward * ( isMove ? defaultMove : 0.0 ));
 }
 
 

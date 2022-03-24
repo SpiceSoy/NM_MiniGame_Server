@@ -60,10 +60,10 @@ namespace Game
 
         void BroadcastByte( const Byte* data, UInt32 size );
         void BroadcastByte( const Byte* data, UInt32 size, Int32 expectedUserIndex );
-        bool CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime );
+        bool CheckCollisionTwoPlayer( PlayerCharacter& firstChr, PlayerController& firstCon, PlayerCharacter& secondChr, PlayerController& secondCon, Double deltaTime );
         void ResolveCollision( PlayerCharacter& firstChr, PlayerCharacter& secondChr, Double deltaTime, Double penetration );
+        void ResolveSpawnCollision( PlayerCharacter& spawnCharacter, PlayerCharacter& other, Double deltaTime, Double penetration );
         Vector GetSpawnLocation( UInt32 index ) const;
-        //Vector GetFirstSpawnLocation( UInt32 index ) const;
         Vector GetSpawnForward( UInt32 index ) const;
         ERoomState GetState() const;
         void SetState( ERoomState state );

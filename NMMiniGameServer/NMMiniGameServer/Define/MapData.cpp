@@ -32,15 +32,15 @@ namespace Constant
     Double GameTotalTimeSeconds = 90; // 게임 전체 시간
 
     // Map
-    Double MapSize = 1350; // 맵 사이즈 / 현 기준 ( 언리얼 맵 1300 + 연출을 위한 50 )
+    Double MapSize = 1450; // 맵 사이즈 / 현 기준 ( 언리얼 맵 1300 + 연출을 위한 50 )
     Double MapSpawnPointRatio = 0.75; // 0~1 맵 사이즈 기준 최초 스폰 위치 / 1일때 1300에 소환 
     Double MapCharacterDefaultHeight = -84.787506; // 일반적으로 캐릭터 돌아다니는 Z(높이)값
     Double MapSpawnRespawnHeight = -84.787506; // 캐릭터 스폰 시 설정할 Z(높이) 값
 
     Double MapFirstDisableSeconds = 30;
-    Double MapFirstDisableSize = 950;
+    Double MapFirstDisableSize = 1100;
     Double MapSecondDisableSeconds = 60;
-    Double MapSecondDisableSize = 600;
+    Double MapSecondDisableSize = 800;
 
     Double ItemRadius = 50;
     Double ItemRegenMinSeconds = 5;

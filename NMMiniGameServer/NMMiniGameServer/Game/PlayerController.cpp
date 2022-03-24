@@ -314,6 +314,7 @@ void Game::PlayerController::ApplyKing()
 
 void Game::PlayerController::RemoveBuff()
 {
+    if( currentItem == EItemType::None ) return;
     LogLine( "Remove Buff %s", to_string( currentItem ) );
     SendBuffEndPacket( );
     switch ( currentItem )
@@ -618,7 +619,10 @@ void Game::PlayerController::AddStateFunctions()
                                     Vector outVector = character->GetLocation().Normalized();
                                     this->SendStateChangedPacket( EPlayerState::Die );
                                     character->StopMove( );
-                                    character->SetSpeed( outVector * Constant::CharacterMapOutSpeed );
+                                    character->AddSpeed( outVector * Constant::CharacterMapOutSpeed );
+                                    auto speed = outVector * Constant::CharacterMapOutSpeed;
+                                    character->SetForward( outVector );
+                                    RemoveBuff();
                                     return StateFuncResult< EPlayerState >::NoChange();
                                 } );
     fsm.AddStateFunctionOnUpdate( EPlayerState::Die,
