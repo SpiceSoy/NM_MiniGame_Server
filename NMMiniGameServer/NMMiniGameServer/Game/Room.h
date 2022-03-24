@@ -37,6 +37,7 @@ namespace Game
         std::vector< Network::Session* > sessions;
         std::vector< Int32 > scores;
         std::set< Int32 > prevMaxUsers;
+        std::set< Int32 > maxUsers;
         std::list<Item> items;
         Timer startTime;
         Timer itemSpawnedTime;
@@ -44,6 +45,7 @@ namespace Game
         Int32 itemIndex = 0;
         Double currentMapSize = 0;
         Int32 mapPhase = 0;
+        bool shouldCheckKing = true;
     public:
         Room( Int32 userCount );
         ~Room() = default;

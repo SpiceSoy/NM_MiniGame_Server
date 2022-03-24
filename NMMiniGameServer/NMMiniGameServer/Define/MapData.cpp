@@ -25,7 +25,7 @@ using namespace std;
 namespace Constant
 {
     // Server
-    Int32 TickTerm = 1000 / 60; // 게임 틱 사이 시간, 쓰지 마십시오
+    Int32 TickTerm = 60; // 게임 틱 사이 시간, 쓰지 마십시오
     Int32 MaxUserCount = 3; // 전체 유저
 
     Double GameFirstWaitSeconds = 1.5; // 게임 최초 대기 시간 (매칭 <-> 조작 가능)
@@ -82,7 +82,9 @@ namespace Constant
     Double CharacterMaxSpeed = 2000.0; // 캐릭터 최대 속도 (아직 미사용)
     Int32 CharacterMaxRushCount = 3; // 캐릭터 러시 스택 최대치
     Double CharacterRushCountRegenSeconds = 7.0; // 스택 리젠 시간 / 현재 사용시 쿨타임 리셋 안됨 -> 추후 개선 예정
+    Double CharacterDieSeconds = 1.5; // 사망 판정 이후 리스폰까지 걸릴 시간 (사망 판정(맵 밖으로 나감) <->
     Double CharacterRespawnSeconds = 1.5; // 사망 판정 이후 리스폰까지 걸릴 시간 (사망 판정(맵 밖으로 나감) <->
+
 
     // ****Score 점수 판정 무조건 합산****
     Int32 ScoreKillPlayer = 1; // 최종 킬러 판단자
@@ -132,7 +134,7 @@ map< std::string, std::pair< ETypeToken, void* > > variableMaps = {
     AddToken( ETypeToken::Digit, ScoreSelfDiePlayer ),
     // Timer
     AddToken( ETypeToken::Float, CharacterRushCountRegenSeconds ),
-    AddToken( ETypeToken::Float, CharacterRespawnSeconds ),
+    AddToken( ETypeToken::Float, CharacterDieSeconds ),
     AddToken( ETypeToken::Float, GameFirstWaitSeconds ),
     AddToken( ETypeToken::Float, GameTotalTimeSeconds ),
     AddToken( ETypeToken::Float, CharacterRushMinimumRecastSeconds ),
@@ -161,6 +163,7 @@ map< std::string, std::pair< ETypeToken, void* > > variableMaps = {
     AddToken( ETypeToken::Float, MapFirstDisableSize ),
     AddToken( ETypeToken::Float, MapSecondDisableSeconds ),
     AddToken( ETypeToken::Float, MapSecondDisableSize ),
+    AddToken( ETypeToken::Float, CharacterRespawnSeconds ),
 
 };
 

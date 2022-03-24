@@ -80,6 +80,7 @@ namespace Constant
     extern Double CharacterMaxSpeed;
     extern Int32 CharacterMaxRushCount;
     extern Double CharacterRushCountRegenSeconds;
+    extern Double CharacterDieSeconds;
     extern Double CharacterRespawnSeconds;
     extern Double CharacterRushMinimumRecastSeconds;
 

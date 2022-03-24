@@ -309,6 +309,7 @@ void Game::PlayerController::ApplyKing()
     LogLine( "Apply King" );;
     SendKingStartPacket( );
     this->character->SetRadius( Constant::CharacterKingRadius );
+    this->character->SetMoveSpeed( Constant::CharacterDefaultSpeed * 0.8 );
 }
 
 
@@ -349,6 +350,7 @@ void Game::PlayerController::RemoveKing()
 {
     LogLine( "Remove King" );
     this->character->SetRadius( Constant::CharacterRadius );
+    this->character->SetMoveSpeed( Constant::CharacterDefaultSpeed );
     SendKingEndPacket();
 }
 
@@ -628,7 +630,7 @@ void Game::PlayerController::AddStateFunctions()
     fsm.AddStateFunctionOnUpdate( EPlayerState::Die,
                                  [this]( Double deltaTime ) -> StateFuncResult< EPlayerState >
                                  {
-                                     if ( timerRespawnStart.IsOverSeconds( Constant::CharacterRespawnSeconds ) )
+                                     if ( timerRespawnStart.IsOverSeconds( Constant::CharacterDieSeconds ) )
                                      {
                                          character->SetLocation( room->GetSpawnLocation( playerIndex ) );
                                          character->SetForward( room->GetSpawnForward( playerIndex ) );

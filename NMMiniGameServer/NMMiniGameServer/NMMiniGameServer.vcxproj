@@ -32,6 +32,7 @@
     <ClInclude Include="Game\RoomState.h" />
     <ClInclude Include="Game\Timer.h" />
     <ClInclude Include="Game\Vector.h" />
+    <ClInclude Include="Network\GameTimer.h" />
     <ClInclude Include="Network\Server.h" />
     <ClInclude Include="Network\Session.h" />
     <ClInclude Include="Network\UtillFuntions.h" />
@@ -46,6 +47,7 @@
     <ClCompile Include="Game\Timer.cpp" />
     <ClCompile Include="Game\Vector.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Network\GameTimer.cpp" />
     <ClCompile Include="Network\Server.cpp" />
     <ClCompile Include="Network\Session.cpp" />
     <ClCompile Include="Network\UtillFuntions.cpp" />

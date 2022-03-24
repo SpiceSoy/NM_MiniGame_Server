@@ -50,6 +50,7 @@ Void Network::Server::Initialize( UInt16 Port )
     InitializeSocket();
     CreateListenSocket();
     BindListenSocket();
+    timer.Reset();
 }
 
 
@@ -63,17 +64,9 @@ Void Network::Server::Process()
     while ( true )
     {
         Select();
-        auto now = std::chrono::system_clock::now();
-        auto delta = std::chrono::duration_cast< std::chrono::milliseconds >( now - prev );
-        auto expected = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::milliseconds( Constant::TickTerm ) );
-        if ( expected > delta )
-        {
-            std::this_thread::sleep_for( expected - delta );
-            now = std::chrono::system_clock::now();
-            delta = std::chrono::duration_cast< std::chrono::milliseconds >( now - prev );
-        }
-        prev = now;
-        UpdateRooms( delta.count() / 1000.0f );
+        timer.Tick( Constant::TickTerm );
+        UpdateRooms( timer.GetTimeElapsed() );
+        //std::cout << "Update" << std::endl;
         if ( turnOnMatch )
         {
             QueuingMatch();

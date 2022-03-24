@@ -68,6 +68,9 @@
     <ClInclude Include="Game\RoomState.h">
       <Filter>소스 파일\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Network\GameTimer.h">
+      <Filter>소스 파일\Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Network\Server.cpp">
@@ -105,6 +108,9 @@
     </ClCompile>
     <ClCompile Include="Game\Item.cpp">
       <Filter>소스 파일\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\GameTimer.cpp">
+      <Filter>소스 파일\Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

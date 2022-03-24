@@ -13,6 +13,7 @@
 #include "Define/DataTypes.h"
 #include "Define/MapData.h"
 #include "Network/Session.h"
+#include "Network/GameTimer.h"
 #include <array>
 #include <list>
 #include <memory>
@@ -54,6 +55,7 @@ namespace Network
         std::list< RequestMatch > matchQueue;
         std::list< ReadyMatch > readyMatches;
         bool turnOnMatch = false;
+        GameTimer timer;
     public:
         Server();
         ~Server();

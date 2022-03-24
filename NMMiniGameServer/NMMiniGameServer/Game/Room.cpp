@@ -103,6 +103,7 @@ void Game::Room::CheckCollisionItem()
                     LogLine( "Item Collided" );
                     //remove by get
                     BroadcastRemoveItem( item, true );
+                    controller.RemoveBuff();
                     controller.ApplyBuff( item.GetType() );
                     i = items.erase( i );
                     itemErased = true;
@@ -124,19 +125,29 @@ void Game::Room::UpdateItem( Double deltaTime )
 
 void Game::Room::UpdateMap()
 {
-    if( mapPhase == 0 && startTime.IsOverSeconds( Constant::MapFirstDisableSeconds ) )
+
+
+    if( mapPhase == 0 && startTime.IsOverSeconds( Constant::MapFirstDisableSeconds - 3 ) )
     {
         LogLine( "MapPhase Changed : %d" , mapPhase );
-        BroadcastMapSizeChanged(mapPhase);
-        currentMapSize = Constant::MapFirstDisableSize;
+        BroadcastMapSizeChanged(0);
         mapPhase = 1;
     }
-    else if( mapPhase == 1 && startTime.IsOverSeconds( Constant::MapSecondDisableSeconds ))
+    else if( mapPhase == 1 && startTime.IsOverSeconds( Constant::MapFirstDisableSeconds ) )
+    {
+        currentMapSize = Constant::MapFirstDisableSize;
+        mapPhase = 2;
+    }
+    else if( mapPhase == 2 && startTime.IsOverSeconds( Constant::MapSecondDisableSeconds - 3) )
     {
         LogLine( "MapPhase Changed : %d", mapPhase );
-        BroadcastMapSizeChanged( mapPhase );
+        BroadcastMapSizeChanged( 1 );
+        mapPhase = 3;
+    }
+    else if( mapPhase == 3 && startTime.IsOverSeconds( Constant::MapSecondDisableSeconds ))
+    {
         currentMapSize = Constant::MapSecondDisableSize;
-        mapPhase = 2;
+        mapPhase = 4;
     }
 }
 
@@ -183,9 +194,13 @@ void Game::Room::CheckStateChange()
     if ( state == ERoomState::Doing && startTime.IsOverSeconds( Constant::GameTotalTimeSeconds ) )
     {
         Int32 maxScore = 0;
-        for( Int32 i = 0; i < maxUserCount; ++i ) maxScore = std::max( maxScore, scores[i] );
+        for( Int32 i = 0; i < maxUserCount; ++i )
+        {
+            maxScore = std::max( maxScore, scores[i] );
+        }
         for ( Int32 i = 0; i < maxUserCount; ++i )
         {
+            players[i].RemoveBuff();
             players[i].ChangeState( maxScore == scores[i] ? EPlayerState::Win : EPlayerState::Lose );
         }
         SetState( ERoomState::End );
@@ -207,6 +222,7 @@ void Game::Room::Update( Double deltaTime )
     UpdateCharacter( deltaTime );
     CheckCollision( deltaTime );
     UpdateItem( deltaTime );
+    CheckNewKing();
     CheckStateChange();
 }
 
@@ -482,9 +498,11 @@ void Game::Room::BroadcastKillLogPacket( Int32 playerIndex, Int32 killerIndex )
 
 void Game::Room::CheckNewKing()
 {
+    if( !shouldCheckKing ) return;
+    if( !startTime.IsOverSeconds( Constant::MapFirstDisableSeconds ) ) return;
     Int32 maxScore = -1;
-    std::set< Int32 > maxUsers;
 
+    LogLine( "CheckNewKing" );
     for ( Int32 i = 0; i < maxUserCount; ++i )
     {
         if ( maxScore < scores[ i ] )
@@ -499,24 +517,42 @@ void Game::Room::CheckNewKing()
         }
     }
 
-    for ( Int32 i = 0; i < maxUserCount; ++i )
+    if( maxUsers.size( ) == maxUserCount )
     {
-        if ( prevMaxUsers.count( i ) )
+        for( Int32 i = 0; i < maxUserCount; ++i )
         {
-            if ( !maxUsers.count( i ) )
+            if( prevMaxUsers.count( i ) )
             {
-                players[ i ].RemoveKing();
+                players[i].RemoveKing( );
             }
         }
-        else
+        maxUsers.clear();
+    }
+    else
+    {
+        for( Int32 i = 0; i < maxUserCount; ++i )
         {
-            if ( maxUsers.count( i ) )
+            if( prevMaxUsers.count( i ) )
             {
-                players[ i ].ApplyKing();
+                if( !maxUsers.count( i ) )
+                {
+                    players[i].RemoveKing( );
+                }
+            }
+            else
+            {
+                if( maxUsers.count( i ) )
+                {
+                    players[i].ApplyKing( );
+                }
             }
         }
     }
+
+    shouldCheckKing = false;
+    prevMaxUsers.clear();
     prevMaxUsers = std::move( maxUsers );
+    maxUsers.clear();
 }
 
 
@@ -530,10 +566,7 @@ void Game::Room::OnDiePlayer( const PlayerController* player )
     
     scores[playerIndex] = std::max( playerLastScore, 0 );
 
-    //Update King
-
-    CheckNewKing();
-
+    shouldCheckKing = true;
 
     if ( hasKiller )
     {
