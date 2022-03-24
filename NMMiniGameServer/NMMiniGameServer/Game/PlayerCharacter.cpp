@@ -1,7 +1,7 @@
 //=================================================================================================
 // @file PlayerController.h
 //
-// @brief ï¿½Ì´Ï°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½.
+// @brief ¹Ì´Ï°ÔÀÓ ³»¿¡¼­ ÇÃ·¹ÀÌ¾îÀÇ °ÔÀÓ ÀÔ·Â Ã³¸®¸¦ ´ã´çÇÒ Å¬·¡½ºÀÔ´Ï´Ù.
 // 
 // @date 2022/03/14
 //
@@ -156,7 +156,7 @@ void Game::PlayerCharacter::Update( Double deltaTime )
 {
     location += GetFinalSpeed() * deltaTime;
     assert( location.IsNan() == false );
-    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ¸¶Âû·Â
     if ( !speed.IsZero() )
     {
         Vector Friction = -speed.Normalized() * Constant::CharacterFriction * deltaTime * 2.0f;
